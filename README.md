@@ -8,11 +8,17 @@ A minimal viable product for generating QR codes during AXA client onboarding pr
 axa-qr-mvp/
 ├── qr/
 │   ├── gen_qr.py         # Core QR generation logic
-│   └── app.py            # FastAPI application
+│   ├── app.py            # FastAPI application (port 8000)
+│   └── gdpr_compliance.py # GDPR compliance features
+├── adapt/
+│   ├── room_detector.py  # Core room detection logic
+│   └── app.py            # Room detection API (port 8001)
 ├── workflows/            # n8n workflow configurations
 │   └── qr-onboard.json   # Client onboarding workflow
 ├── qr-codes/             # Generated QR code storage
 ├── requirements.txt      # Python dependencies
+├── test_gdpr_features.py # GDPR compliance tests
+├── test_room_detection.py # Room detection tests
 └── README.md
 ```
 
@@ -42,13 +48,20 @@ axa-qr-mvp/
    pip install -r requirements.txt
    ```
 
-4. **Run the FastAPI server**
+4. **Run the services**
    ```bash
+   # Terminal 1: QR Code service
    cd qr
-   python app.py
+   python3 app.py
+   
+   # Terminal 2: Room Detection service  
+   cd adapt
+   python3 app.py
    ```
 
-The API will be available at `http://localhost:8000`
+The APIs will be available at:
+- QR Code API: `http://localhost:8000`
+- Room Detection API: `http://localhost:8001`
 
 ## 📡 API Documentation
 
@@ -149,8 +162,87 @@ Admin endpoint to grant consent for pilot users.
 List all users who have given consent.
 
 ### Interactive API Documentation
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
+- QR Code API: `http://localhost:8000/docs`
+- Room Detection API: `http://localhost:8001/docs`
+
+## 🏢 Room Detection API
+
+The Room Detection service provides multiple methods to identify and classify room types.
+
+### Detection Methods
+
+#### `POST /detect/image`
+Upload an image file for computer vision-based room detection.
+
+**Request:** Upload image file
+**Response:**
+```json
+{
+  "detection_id": "550e8400-e29b-41d4-a716-446655440000",
+  "room_type": "meeting_room",
+  "confidence": 0.85,
+  "detection_method": "computer_vision",
+  "timestamp": "2024-01-01T12:00:00",
+  "metadata": {
+    "image_path": "/tmp/meeting_room.jpg",
+    "filename": "meeting_room.jpg",
+    "analysis_method": "filename_based_demo"
+  }
+}
+```
+
+#### `POST /detect/sensors`
+Analyze IoT sensor data for room classification.
+
+**Request:**
+```json
+{
+  "occupancy": 5,
+  "temperature": 22.5,
+  "humidity": 45.0,
+  "light_level": 500.0,
+  "co2_level": 900.0,
+  "noise_level": 40.0,
+  "motion_detected": true
+}
+```
+
+#### `POST /detect/manual`
+Manually specify room type for ground truth data.
+
+**Request:**
+```json
+{
+  "room_type": "conference_room",
+  "room_id": "CR-A-301",
+  "building_id": "AXA-HQ-Paris"
+}
+```
+
+### Analytics Endpoints
+
+#### `GET /detection/history`
+Get recent detection history with optional limit parameter.
+
+#### `GET /detection/statistics`
+Get aggregated statistics about room detections including:
+- Total detections count
+- Room type distribution
+- Detection method usage
+- Average confidence scores
+
+#### `GET /rooms/types`
+List all available room types that can be detected:
+- office, meeting_room, conference_room
+- lobby, kitchen, bathroom
+- storage, corridor, unknown
+
+### Testing Room Detection
+
+```bash
+# Test the room detection system
+python3 test_room_detection.py
+```
 
 ## 🔄 n8n Workflow
 
