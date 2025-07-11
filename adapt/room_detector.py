@@ -1,12 +1,11 @@
 """
 Room Detection Module for AXA Adapt Component
 
-This module provides room detection capabilities that could include:
-- Computer vision-based room type detection
-- Audio analysis for room acoustics  
-- IoT sensor integration for occupancy
-- Camera-based layout analysis
-- Building management system integration
+This module provides room detection capabilities:
+- Computer vision-based room type detection from images
+- Manual room type classification for ground truth data
+- Detection history and analytics
+- Confidence scoring for classification results
 """
 
 import json
@@ -32,10 +31,7 @@ class RoomType(Enum):
 class DetectionMethod(Enum):
     """Available detection methods."""
     COMPUTER_VISION = "computer_vision"
-    AUDIO_ANALYSIS = "audio_analysis"
-    IOT_SENSORS = "iot_sensors"
     MANUAL_INPUT = "manual_input"
-    BUILDING_SYSTEM = "building_system"
 
 @dataclass
 class DetectionResult:
@@ -150,88 +146,7 @@ class RoomDetector:
         self.detection_history.append(result)
         return result
 
-    def detect_room_from_audio(self, audio_file: str, duration: float = 10.0) -> DetectionResult:
-        """
-        Detect room type from audio characteristics.
-        
-        Args:
-            audio_file: Path to audio file
-            duration: Duration to analyze in seconds
-            
-        Returns:
-            DetectionResult with room analysis
-        """
-        self.logger.info(f"Analyzing audio: {audio_file}")
-        
-        # Placeholder for audio analysis implementation
-        # Real implementation would analyze:
-        # - Room reverb/echo characteristics
-        # - Background noise patterns
-        # - Frequency response
-        # - Voice clarity and reflections
-        
-        result = DetectionResult(
-            room_type=RoomType.UNKNOWN,
-            confidence=0.6,
-            detection_method=DetectionMethod.AUDIO_ANALYSIS,
-            timestamp=datetime.now().isoformat(),
-            metadata={
-                "audio_file": audio_file,
-                "duration": duration,
-                "analysis_method": "placeholder"
-            }
-        )
-        
-        self.detection_history.append(result)
-        return result
 
-    def detect_room_from_sensors(self, sensor_data: Dict[str, Any]) -> DetectionResult:
-        """
-        Detect room characteristics from IoT sensor data.
-        
-        Args:
-            sensor_data: Dictionary containing sensor readings
-            
-        Returns:
-            DetectionResult with room analysis
-        """
-        self.logger.info("Analyzing sensor data")
-        
-        # Placeholder for IoT sensor analysis
-        # Real implementation would process:
-        # - Motion sensors
-        # - Temperature/humidity
-        # - Light sensors
-        # - CO2 levels
-        # - Occupancy sensors
-        
-        room_type = RoomType.UNKNOWN
-        confidence = 0.5
-        
-        # Simple heuristic based on occupancy and temperature
-        occupancy = sensor_data.get("occupancy", 0)
-        temperature = sensor_data.get("temperature", 20)
-        
-        if occupancy > 10:
-            room_type = RoomType.CONFERENCE_ROOM
-            confidence = 0.8
-        elif occupancy > 2:
-            room_type = RoomType.MEETING_ROOM  
-            confidence = 0.7
-        elif temperature > 25:
-            room_type = RoomType.KITCHEN
-            confidence = 0.6
-        
-        result = DetectionResult(
-            room_type=room_type,
-            confidence=confidence,
-            detection_method=DetectionMethod.IOT_SENSORS,
-            timestamp=datetime.now().isoformat(),
-            metadata=sensor_data
-        )
-        
-        self.detection_history.append(result)
-        return result
 
     def manual_room_input(self, room_type: str, room_id: Optional[str] = None, building_id: Optional[str] = None) -> DetectionResult:
         """

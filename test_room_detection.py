@@ -134,56 +134,8 @@ def main():
             if os.path.exists(image_path):
                 os.unlink(image_path)
     
-    # Test 5: Sensor-based detection
-    print("\n5️⃣ Sensor-Based Room Detection")
-    
-    sensor_test_cases = [
-        {
-            "name": "Conference Room (High Occupancy)",
-            "data": {
-                "occupancy": 15,
-                "temperature": 23.5,
-                "humidity": 50.0,
-                "light_level": 600.0,
-                "co2_level": 1200.0,
-                "noise_level": 55.0,
-                "motion_detected": True
-            }
-        },
-        {
-            "name": "Meeting Room (Medium Occupancy)",
-            "data": {
-                "occupancy": 4,
-                "temperature": 22.0,
-                "humidity": 45.0,
-                "light_level": 500.0,
-                "co2_level": 900.0,
-                "noise_level": 40.0,
-                "motion_detected": True
-            }
-        },
-        {
-            "name": "Kitchen (High Temperature)",
-            "data": {
-                "occupancy": 2,
-                "temperature": 26.0,
-                "humidity": 60.0,
-                "light_level": 400.0,
-                "co2_level": 800.0,
-                "noise_level": 50.0,
-                "motion_detected": True
-            }
-        }
-    ]
-    
-    sensor_results = []
-    for test_case in sensor_test_cases:
-        print(f"\n   📊 Testing {test_case['name']}...")
-        result = test_endpoint("POST", "/detect/sensors", test_case["data"])
-        sensor_results.append(result)
-    
-    # Test 6: Manual room detection
-    print("\n6️⃣ Manual Room Detection")
+    # Test 5: Manual room detection
+    print("\n5️⃣ Manual Room Detection")
     manual_cases = [
         {
             "room_type": "office",
@@ -202,12 +154,12 @@ def main():
         result = test_endpoint("POST", "/detect/manual", case)
         manual_results.append(result)
     
-    # Test 7: Detection history
-    print("\n7️⃣ Detection History")
+    # Test 6: Detection history
+    print("\n6️⃣ Detection History")
     history = test_endpoint("GET", "/detection/history?limit=5")
     
-    # Test 8: Room statistics
-    print("\n8️⃣ Room Statistics")
+    # Test 7: Room statistics
+    print("\n7️⃣ Room Statistics")
     statistics = test_endpoint("GET", "/detection/statistics")
     
     # Summary
@@ -216,7 +168,7 @@ def main():
     print("=" * 55)
     
     tests_passed = 0
-    total_tests = 8
+    total_tests = 7
     
     if health and health.get("status") == "healthy":
         print("✅ Health check passed")
@@ -243,13 +195,6 @@ def main():
     else:
         print(f"❌ Image detection issues ({successful_image_detections}/3 successful)")
     
-    successful_sensor_detections = sum(1 for r in sensor_results if r and r.get("room_type"))
-    if successful_sensor_detections >= 2:
-        print(f"✅ Sensor detection working ({successful_sensor_detections}/3 successful)")
-        tests_passed += 1
-    else:
-        print(f"❌ Sensor detection issues ({successful_sensor_detections}/3 successful)")
-    
     successful_manual_detections = sum(1 for r in manual_results if r and r.get("room_type"))
     if successful_manual_detections >= 1:
         print(f"✅ Manual detection working ({successful_manual_detections}/2 successful)")
@@ -271,13 +216,13 @@ def main():
     
     print(f"\n🎯 Score: {tests_passed}/{total_tests} tests passed")
     
-    if tests_passed >= 6:
+    if tests_passed >= 5:
         print("🎉 Room detection system is working well!")
         print("\n📋 Next steps:")
         print("   • Integrate with computer vision models for better image detection")
-        print("   • Add real audio analysis capabilities")
-        print("   • Connect to actual IoT sensors")
-        print("   • Implement ML-based room classification")
+        print("   • Train ML models on your specific room types")
+        print("   • Add more sophisticated image analysis features")
+        print("   • Implement room layout detection")
     else:
         print("⚠️  Several tests failed - check the API server")
         print("\n🔧 Troubleshooting:")

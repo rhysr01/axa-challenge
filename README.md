@@ -191,21 +191,7 @@ Upload an image file for computer vision-based room detection.
 }
 ```
 
-#### `POST /detect/sensors`
-Analyze IoT sensor data for room classification.
 
-**Request:**
-```json
-{
-  "occupancy": 5,
-  "temperature": 22.5,
-  "humidity": 45.0,
-  "light_level": 500.0,
-  "co2_level": 900.0,
-  "noise_level": 40.0,
-  "motion_detected": true
-}
-```
 
 #### `POST /detect/manual`
 Manually specify room type for ground truth data.

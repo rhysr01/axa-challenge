@@ -22,31 +22,7 @@ room_detector = RoomDetector()
 class ImageDetectionRequest(BaseModel):
     image_url: Optional[str] = Field(None, description="URL to image file")
     
-class AudioDetectionRequest(BaseModel):
-    audio_url: str = Field(..., description="URL to audio file")
-    duration: float = Field(10.0, description="Duration to analyze in seconds")
 
-class SensorDetectionRequest(BaseModel):
-    occupancy: Optional[int] = Field(None, description="Number of people detected")
-    temperature: Optional[float] = Field(None, description="Temperature in Celsius")
-    humidity: Optional[float] = Field(None, description="Humidity percentage")
-    light_level: Optional[float] = Field(None, description="Light level (lux)")
-    co2_level: Optional[float] = Field(None, description="CO2 level (ppm)")
-    noise_level: Optional[float] = Field(None, description="Noise level (dB)")
-    motion_detected: Optional[bool] = Field(None, description="Motion sensor status")
-    
-    class Config:
-        schema_extra = {
-            "example": {
-                "occupancy": 3,
-                "temperature": 22.5,
-                "humidity": 45.0,
-                "light_level": 500.0,
-                "co2_level": 800.0,
-                "noise_level": 45.0,
-                "motion_detected": True
-            }
-        }
 
 class ManualDetectionRequest(BaseModel):
     room_type: str = Field(..., description="Room type to set manually")
@@ -137,38 +113,7 @@ async def detect_room_from_image(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Detection failed: {str(e)}")
 
-@app.post("/detect/audio", response_model=DetectionResponse)
-async def detect_room_from_audio(request: AudioDetectionRequest):
-    """
-    Detect room type from audio characteristics.
-    
-    Analyze audio file to determine room acoustics and type.
-    """
-    try:
-        # In a real implementation, you would download the audio file
-        # For now, we'll use the URL as a placeholder
-        result = room_detector.detect_room_from_audio(request.audio_url, request.duration)
-        return detection_result_to_response(result)
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Audio detection failed: {str(e)}")
 
-@app.post("/detect/sensors", response_model=DetectionResponse)
-async def detect_room_from_sensors(request: SensorDetectionRequest):
-    """
-    Detect room characteristics from IoT sensor data.
-    
-    Analyze sensor readings to determine room type and occupancy.
-    """
-    try:
-        # Convert request to dictionary
-        sensor_data = request.dict(exclude_none=True)
-        
-        result = room_detector.detect_room_from_sensors(sensor_data)
-        return detection_result_to_response(result)
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Sensor detection failed: {str(e)}")
 
 @app.post("/detect/manual", response_model=DetectionResponse)
 async def manual_room_detection(request: ManualDetectionRequest):
@@ -244,11 +189,15 @@ async def get_available_detection_methods():
     return {
         "detection_methods": [
             {
-                "value": method.value,
-                "description": method.value.replace("_", " ").title(),
-                "endpoint": f"/detect/{method.value.split('_')[0]}" if method != DetectionMethod.BUILDING_SYSTEM else "/detect/manual"
+                "value": DetectionMethod.COMPUTER_VISION.value,
+                "description": "Computer Vision",
+                "endpoint": "/detect/image"
+            },
+            {
+                "value": DetectionMethod.MANUAL_INPUT.value,
+                "description": "Manual Input",
+                "endpoint": "/detect/manual"
             }
-            for method in DetectionMethod
         ]
     }
 
