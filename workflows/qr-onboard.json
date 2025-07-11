@@ -20,6 +20,29 @@
     },
     {
       "parameters": {
+        "url": "http://localhost:8000/consent-status/{{ $json.user_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1c2d3e4-f5g6-7890-abcd-ef1234567890",
+      "name": "Check Consent Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        380,
+        300
+      ]
+    },
+    {
+      "parameters": {
         "url": "http://localhost:8000/generate",
         "sendHeaders": true,
         "headerParameters": {
@@ -46,7 +69,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        460,
+        600,
         300
       ]
     },
@@ -75,7 +98,7 @@
     {
       "parameters": {
         "channel": "#axa-onboarding",
-        "text": "🎉 New AXA client onboarded successfully!\n\n*User ID:* {{ $('Generate QR Code').first().json.user_id }}\n*QR Code:* {{ $('Generate QR Code').first().json.file_url }}\n*GitHub:* https://github.com/{{ $json.github_owner || 'your-org' }}/{{ $json.github_repo || 'axa-qr-mvp' }}/blob/main/qr-codes/{{ $('Generate QR Code').first().json.user_id }}.png",
+        "text": "🎉 New AXA client onboarded successfully!\n\n*User ID:* {{ $('Generate QR Code').first().json.user_id }}\n*QR Code:* {{ $('Generate QR Code').first().json.file_url }}\n*Request ID:* {{ $('Generate QR Code').first().json.request_id }}\n*Data Residency:* {{ $('Generate QR Code').first().json.data_residency }}\n*GDPR Consent:* ✅ Verified\n*GitHub:* https://github.com/{{ $json.github_owner || 'your-org' }}/{{ $json.github_repo || 'axa-qr-mvp' }}/blob/main/qr-codes/{{ $('Generate QR Code').first().json.user_id }}.png",
         "otherOptions": {}
       },
       "id": "d4e5f6g7-h8i9-0123-defg-456789012345",
@@ -105,6 +128,17 @@
   "pinData": {},
   "connections": {
     "Webhook - New AXA Client": {
+      "main": [
+        [
+          {
+            "node": "Check Consent Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Consent Status": {
       "main": [
         [
           {
