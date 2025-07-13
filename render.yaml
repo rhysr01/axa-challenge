@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: axa-elderly-care
+    env: docker
+    plan: free  # or 'standard' for production
+    region: oregon  # or your preferred region
+    build:
+      dockerfile: Dockerfile
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.13
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: 10000
+      - key: STORAGE_TYPE
+        value: local  # For production, consider using a persistent disk or S3
+    # Uncomment and configure for production
+    # disk:
+    #   name: axa-storage
+    #   mountPath: /app/outputs
+    #   sizeGB: 1
+    autoDeploy: true
+    healthCheckPath: /
+    healthCheckTimeout: 300
