@@ -1,0 +1,80 @@
+{
+  "user_id": "maria_santos_001",
+  "profile_created": "2025-07-13T09:00:00Z",
+  "last_updated": "2025-07-13T09:00:00Z",
+  "personal_info": {
+    "name": "Maria Santos",
+    "age": 72,
+    "gender": "female",
+    "height_cm": 162,
+    "weight_kg": 65
+  },
+  "health_conditions": {
+    "mobility": {
+      "score": 6,
+      "notes": "Uses walking cane, mild arthritis in knees",
+      "assistive_devices": ["walking_cane"],
+      "limitations": ["stairs", "uneven_surfaces", "wet_floors"]
+    },
+    "cognition": {
+      "score": 8,
+      "notes": "Mild memory issues, occasionally forgets appliances",
+      "concerns": ["short_term_memory", "attention_span"]
+    },
+    "vision": {
+      "score": 7,
+      "notes": "Wears glasses, difficulty with low light",
+      "corrective_lenses": true,
+      "night_vision_issues": true,
+      "eye_conditions": ["presbyopia", "mild_cataracts"]
+    }
+  },
+  "fall_history": {
+    "previous_falls": 2,
+    "last_fall_date": "2025-03-15",
+    "fall_locations": ["bathroom", "kitchen"],
+    "fear_of_falling": 7
+  },
+  "medications": {
+    "current_medications": [
+      {
+        "name": "Lisinopril",
+        "dosage": "10mg",
+        "frequency": "once_daily",
+        "purpose": "blood_pressure",
+        "side_effects": ["dizziness", "fatigue"]
+      },
+      {
+        "name": "Metformin",
+        "dosage": "500mg",
+        "frequency": "twice_daily",
+        "purpose": "diabetes"
+      }
+    ],
+    "allergies": ["penicillin", "shellfish"]
+  },
+  "emergency_contacts": [
+    {
+      "name": "Carlos Santos",
+      "relationship": "son",
+      "phone": "+34-600-123-456",
+      "priority": 1,
+      "lives_nearby": true
+    },
+    {
+      "name": "Dr. Elena Rodriguez",
+      "relationship": "primary_physician",
+      "phone": "+34-91-234-5678",
+      "priority": 2
+    }
+  ],
+  "preferences": {
+    "preferred_language": "spanish",
+    "consent_status": {
+      "data_sharing": true,
+      "emergency_access": true,
+      "medical_summary_qr": true
+    }
+  }
+}
+

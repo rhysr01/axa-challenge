@@ -1,0 +1,12 @@
+{
+  "name": "runFallScan",
+  "trigger": "upload_scan_or_checklist",
+  "steps": [
+    "pull_health_profile",
+    "score_hazards",
+    "generate_pdf_report",
+    "notify_caregiver",
+    "save_to_record"
+  ],
+  "output": ["risk_score", "pdf_report"]
+}

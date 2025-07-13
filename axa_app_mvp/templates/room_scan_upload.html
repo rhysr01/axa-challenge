@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AXA ADAPT – Multi-Room Scan</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; background: #f7f9fa; }
+    h2 { color: #e60028; }
+    label { font-weight: bold; margin-top: 12px; display: block; }
+    .success { background: #d1ffd6; padding: 14px; border-radius: 8px; margin-top: 18px; color: #185c1b; }
+    .error { color: #b00; font-weight: bold; }
+    .loading { color: #e60028; font-weight: bold; }
+  .stepper { display: flex; margin-bottom: 18px; }
+  .step { flex: 1; text-align: center; padding: 8px 0; border-bottom: 3px solid #ccc; color: #888; font-size: 1.1em; }
+  .step.active { border-color: #e60028; color: #e60028; font-weight: bold; }
+  .step.completed { border-color: #4caf50; color: #4caf50; }
+  @media (max-width: 600px) {
+    body { padding: 8px; }
+    .stepper { font-size: 0.95em; }
+    h2 { font-size: 1.2em; }
+  }
+  </style>
+</head>
+<body>
+  <div class="stepper" aria-label="Progress">
+    <div class="step completed">1. Profile</div>
+    <div class="step active">2. Photos</div>
+    <div class="step">3. Confirmation</div>
+  </div>
+  <h2>Step 2: Upload 5 Room Photos</h2>
+  <p>Upload one clear photo per room. All 5 are required for a complete scan.</p>
+  <form id="roomForm">
+    <label for="sittingRoom">📷 Sitting Room</label>
+    <input type="file" id="sittingRoom" name="sittingRoom" accept="image/jpeg,image/png" required><br>
+    <label for="bathroom">📷 Bathroom</label>
+    <input type="file" id="bathroom" name="bathroom" accept="image/jpeg,image/png" required><br>
+    <label for="hallway">📷 Hallway</label>
+    <input type="file" id="hallway" name="hallway" accept="image/jpeg,image/png" required><br>
+    <label for="steps">📷 Steps or Stairs</label>
+    <input type="file" id="steps" name="steps" accept="image/jpeg,image/png" required><br>
+    <label for="bedroom">📷 Bedroom</label>
+    <input type="file" id="bedroom" name="bedroom" accept="image/jpeg,image/png" required><br><br>
+    <button type="submit">Analyze My Home</button>
+  </form>
+  <div class="error" id="roomError"></div>
+  <div class="loading" id="roomLoading" style="display:none;">Analyzing photos...</div>
+  <div class="success" id="roomSuccess" style="display:none;"></div>
+  <script>
+    document.getElementById('roomForm').onsubmit = async function(e) {
+      e.preventDefault();
+      document.getElementById('roomError').textContent = '';
+      document.getElementById('roomLoading').style.display = 'block';
+      document.getElementById('roomSuccess').style.display = 'none';
+      const form = e.target;
+      const formData = new FormData();
+      const rooms = ['sittingRoom', 'bathroom', 'hallway', 'steps', 'bedroom'];
+      for (const room of rooms) {
+        const fileInput = form[room];
+        if (fileInput.files[0]) {
+          formData.append(room, fileInput.files[0]);
+        } else {
+          document.getElementById('roomError').textContent = 'Please upload all room photos.';
+          document.getElementById('roomLoading').style.display = 'none';
+          return;
+        }
+      }
+      try {
+        // STEP 3: Send images to detection API (replace with your backend URL)
+        const detectionResponse = await fetch("https://your-backend.com/process-multi-room", {
+          method: "POST",
+          body: formData
+        });
+        let result;
+        if (detectionResponse.ok) {
+          result = await detectionResponse.json();
+        } else {
+          throw new Error('Detection API error');
+        }
+        // STEP 4: Send hazards + profile to n8n webhook
+        const profile = JSON.parse(window.sessionStorage.getItem("axa_profile") || '{}');
+        const email = window.sessionStorage.getItem("axa_email") || '';
+        if (!profile || !email) {
+          document.getElementById('roomError').textContent = 'Profile or email missing. Please complete Step 1.';
+          document.getElementById('roomLoading').style.display = 'none';
+          return;
+        }
+        await fetch("https://rhysr01.app.n8n.cloud/webhook/axa-fall-scan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: "axa_001",
+            email,
+            profile,
+            hazards: result.hazards
+          })
+        });
+        document.getElementById('roomSuccess').textContent = "✅ Scan submitted! Your personalized fall risk report will be emailed shortly.";
+        document.getElementById('roomSuccess').style.display = 'block';
+      } catch (err) {
+        document.getElementById('roomError').textContent = 'An error occurred: ' + err.message;
+      } finally {
+        document.getElementById('roomLoading').style.display = 'none';
+      }
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AXA SafeStep - Fall Risk Personalization</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f9fa; margin: 0; padding: 0; }
+    .container { max-width: 540px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); padding: 32px; }
+    h2 { color: #0066cc; text-align: center; }
+    label { font-weight: bold; display: block; margin-top: 18px; }
+    select, input[type="text"], input[type="email"] { width: 100%; padding: 8px; margin-top: 6px; border-radius: 4px; border: 1px solid #ccc; }
+    .checkbox-group, .radio-group { margin: 8px 0 0 0; }
+    .checkbox-group label, .radio-group label { font-weight: normal; display: inline-block; margin-right: 16px; }
+    button { margin-top: 28px; width: 100%; background: #0066cc; color: #fff; border: none; padding: 14px; font-size: 1.1em; border-radius: 6px; cursor: pointer; }
+    button:disabled { background: #ccc; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Fall Risk Personalization Form</h2>
+    <form id="profileForm">
+      <label for="residenceType">Type of residence</label>
+      <select id="residenceType" required>
+        <option value="">Select...</option>
+        <option>Apartment</option>
+        <option>House w/ stairs</option>
+        <option>Bungalow (flat)</option>
+        <option>Shared care home</option>
+        <option>Nursing home</option>
+      </select>
+
+      <label>Flooring (select all that apply)</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" name="flooring" value="Carpet"> Carpet</label>
+        <label><input type="checkbox" name="flooring" value="Tile"> Tile</label>
+        <label><input type="checkbox" name="flooring" value="Hardwood"> Hardwood</label>
+        <label><input type="checkbox" name="flooring" value="Uneven"> Uneven</label>
+        <label><input type="checkbox" name="flooring" value="Transitions"> Transitions</label>
+      </div>
+
+      <label>Mobility status</label>
+      <div class="radio-group">
+        <label><input type="radio" name="mobility" value="No assistance" required> No assistance</label>
+        <label><input type="radio" name="mobility" value="Walking stick"> Walking stick</label>
+        <label><input type="radio" name="mobility" value="Walker/rollator"> Walker/rollator</label>
+        <label><input type="radio" name="mobility" value="Wheelchair"> Wheelchair</label>
+        <label><input type="radio" name="mobility" value="Post-surgery"> Post-surgery</label>
+      </div>
+
+      <label>Vision status</label>
+      <div class="radio-group">
+        <label><input type="radio" name="vision" value="Normal" required> Normal</label>
+        <label><input type="radio" name="vision" value="Glasses"> Glasses</label>
+        <label><input type="radio" name="vision" value="Low vision"> Low vision</label>
+        <label><input type="radio" name="vision" value="Night blindness"> Night blindness</label>
+        <label><input type="radio" name="vision" value="Peripheral loss"> Peripheral loss</label>
+      </div>
+
+      <label>Cognitive status</label>
+      <div class="radio-group">
+        <label><input type="radio" name="cognition" value="Normal" required> Normal</label>
+        <label><input type="radio" name="cognition" value="Mild memory loss"> Mild memory loss</label>
+        <label><input type="radio" name="cognition" value="Judgment issues"> Judgment issues</label>
+        <label><input type="radio" name="cognition" value="Diagnosed dementia"> Diagnosed dementia</label>
+        <label><input type="radio" name="cognition" value="Confusion in rooms"> Confusion in rooms</label>
+      </div>
+
+      <label>Living situation</label>
+      <div class="radio-group">
+        <label><input type="radio" name="livingSituation" value="Alone" required> Alone</label>
+        <label><input type="radio" name="livingSituation" value="With family"> With family</label>
+        <label><input type="radio" name="livingSituation" value="Part-time carer"> Part-time carer</label>
+        <label><input type="radio" name="livingSituation" value="Live-in carer"> Live-in carer</label>
+      </div>
+
+      <label>Fall history</label>
+      <div class="radio-group">
+        <label><input type="radio" name="fallHistory" value="None" required> None</label>
+        <label><input type="radio" name="fallHistory" value="One fall last year"> One fall last year</label>
+        <label><input type="radio" name="fallHistory" value="Multiple falls"> Multiple falls</label>
+        <label><input type="radio" name="fallHistory" value="Frequent stumbles"> Frequent stumbles</label>
+      </div>
+
+      <label>Medical risks (select all that apply)</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" name="medicalRisks" value="Osteoporosis"> Osteoporosis</label>
+        <label><input type="checkbox" name="medicalRisks" value="Blood thinners"> Blood thinners</label>
+        <label><input type="checkbox" name="medicalRisks" value="Diabetic neuropathy"> Diabetic neuropathy</label>
+        <label><input type="checkbox" name="medicalRisks" value="Stroke"> Stroke</label>
+        <label><input type="checkbox" name="medicalRisks" value="Balance disorder"> Balance disorder</label>
+        <label><input type="checkbox" name="medicalRisks" value="None"> None</label>
+      </div>
+
+      <label for="email">Email (for notifications/report)</label>
+      <input type="email" id="email" name="email" required placeholder="e.g. carer@axa.com">
+
+      <button type="submit">Continue to Upload</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('profileForm').onsubmit = function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const profile = {
+        residenceType: form.residenceType.value,
+        flooring: Array.from(form.querySelectorAll('input[name="flooring"]:checked')).map(cb => cb.value),
+        mobility: form.querySelector('input[name="mobility"]:checked')?.value,
+        vision: form.querySelector('input[name="vision"]:checked')?.value,
+        cognition: form.querySelector('input[name="cognition"]:checked')?.value,
+        livingSituation: form.querySelector('input[name="livingSituation"]:checked')?.value,
+        fallHistory: form.querySelector('input[name="fallHistory"]:checked')?.value,
+        medicalRisks: Array.from(form.querySelectorAll('input[name="medicalRisks"]:checked')).map(cb => cb.value)
+      };
+      const email = form.email.value;
+      // Example: send to backend or store for next step
+      console.log({ profile, email });
+      alert('Profile saved! (See console for JSON)');
+      // TODO: proceed to upload flow, passing { profile, email }
+    };
+  </script>
+</body>
+</html>

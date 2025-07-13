@@ -1,0 +1,11 @@
+{
+  "name": "generateQR",
+  "trigger": "user_tap_generate_qr",
+  "steps": [
+    "generate_token_url",
+    "create_qr_image",
+    "log_access",
+    "create_lock_screen_image"
+  ],
+  "output": ["qr_image", "token_url", "lock_screen_image"]
+}
