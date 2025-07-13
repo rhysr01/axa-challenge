@@ -1,2 +1,7 @@
+ultralytics
+fastapi
+uvicorn
+numpy
+pillow
+opencv-python
 qrcode
-Pillow
