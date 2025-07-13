@@ -1,0 +1,98 @@
+/* AXA Theme CSS for Elderly Accessibility */
+:root {
+  --axa-red: #e60028;
+  --axa-accent: #5f6a72;
+  --axa-bg: #fff;
+  --axa-font: Arial, Helvetica, sans-serif;
+  --axa-radius: 16px;
+  --axa-large-text: 18pt;
+  --axa-btn-radius: 10px;
+  --axa-btn-padding: 18px 30px;
+}
+body {
+  background: var(--axa-bg);
+  font-family: var(--axa-font);
+  color: #222;
+  font-size: var(--axa-large-text);
+}
+.axa-btn, button {
+  background: var(--axa-red);
+  color: #fff;
+  border: none;
+  border-radius: var(--axa-btn-radius);
+  padding: var(--axa-btn-padding);
+  font-size: 1.2em;
+  margin-top: 18px;
+  cursor: pointer;
+  width: 100%;
+  max-width: 340px;
+  display: block;
+  transition: background 0.18s;
+}
+.axa-btn:active, .axa-btn:focus, button:active, button:focus {
+  background: #b8001b;
+  outline: 2px solid var(--axa-accent);
+}
+.axa-btn:disabled, button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+input, select, textarea {
+  font-size: 1.1em;
+  padding: 12px 4px;
+  border-radius: 8px;
+  border: 1px solid #bbb;
+  margin-bottom: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+input[type="checkbox"] {
+  width: 28px;
+  height: 28px;
+  accent-color: var(--axa-red);
+  margin-right: 8px;
+}
+label {
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  display: block;
+}
+.axa-card {
+  background: #fff;
+  border-radius: var(--axa-radius);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.09);
+  padding: 32px 24px 24px 24px;
+  margin-bottom: 28px;
+}
+.axa-section-title {
+  color: var(--axa-red);
+  font-size: 1.3em;
+  font-weight: bold;
+  margin-bottom: 18px;
+}
+.axa-link {
+  color: var(--axa-red);
+  text-decoration: underline;
+  font-size: 1em;
+}
+.axa-link:hover { color: #b8001b; }
+@media (max-width: 900px) {
+  .axa-sidebar {
+    width: 100%;
+    flex-direction: row;
+    gap: 8px;
+    padding: 12px 4vw;
+    border-radius: 0;
+    border-right: none;
+    border-bottom: 2px solid var(--axa-red);
+  }
+  .axa-main {
+    margin-left: 0;
+    padding: 12px 2vw 18px 2vw;
+  }
+}
+@media (max-width: 600px) {
+  body { font-size: 16pt; }
+  .axa-header, .axa-footer { font-size: 1em; }
+  .axa-card { padding: 12px 2vw 18px 2vw; }
+}

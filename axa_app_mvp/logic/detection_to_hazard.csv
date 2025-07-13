@@ -1,0 +1,9 @@
+object,hazard,example,notes
+cord,clutter,"Loose electrical cord in walkway","Trip hazard, especially for mobility issues"
+rug,loose_rugs,"Small throw rug in bedroom","Can slip or bunch up"
+missing_grab_bar,no_grab_bars,"No grab bar in bathroom","Increases fall risk for elderly"
+box,clutter,"Storage box in hallway","Obstructs path"
+wet_floor,poor_lighting,"Wet floor not visible due to poor lighting","Combined hazard"
+shoes,clutter,"Shoes left at entrance","Common trip hazard"
+threshold,steps_or_thresholds,"Raised threshold between rooms","Difficult for mobility aids"
+light_bulb_out,poor_lighting,"Burned out bulb in hallway","Poor visibility"

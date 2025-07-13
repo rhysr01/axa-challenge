@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% block title %}QR Card Generator - AXA{% endblock %}
+{% block content %}
+<div class="axa-card">
+    <div class="axa-section-title">Create Your QR Card</div>
+    <form id="cardGenForm" aria-label="QR Card Generator" autocomplete="on">
+        <label><input type="checkbox" id="fridgeCardCheck" class="card-checkbox" aria-label="Fridge Magnet Card"> Fridge Magnet Card</label>
+        <label><input type="checkbox" id="familyCardCheck" class="card-checkbox" aria-label="Framed Family Photo Card"> Framed Family Photo Card</label>
+        <div id="fridgePhotoUpload" style="display:none;">
+            <label for="fridgePhotoFile">Fridge Card Photo:</label>
+            <input type="file" accept="image/*" id="fridgePhotoFile" class="file-input" aria-label="Upload image for fridge card" autofocus>
+        </div>
+        <div id="familyPhotoUpload" style="display:none;">
+            <label for="familyPhotoFile">Family Card Photo:</label>
+            <input type="file" accept="image/*" id="familyPhotoFile" class="file-input" aria-label="Upload image for family card">
+        </div>
+        <button type="button" onclick="generateCards()" id="generateBtn" class="axa-btn" style="touch-action: manipulation;">Generate Cards</button>
+        <div class="spinner" id="spinner"></div>
+        <div style="margin-top:24px;">
+            <div id="fridgePreviewWrap" style="display:none;">
+                <img id="fridgePreview" class="preview" style="display:none;" alt="Fridge QR preview">
+                <button type="button" class="download-btn axa-btn" style="display:none;" id="fridgeDownloadBtn" aria-label="Download fridge card">Download Fridge Card</button>
+            </div>
+            <div id="familyPreviewWrap" style="display:none;">
+                <img id="familyPreview" class="preview" style="display:none;" alt="Family QR preview">
+                <button type="button" class="download-btn axa-btn" style="display:none;" id="familyDownloadBtn" aria-label="Download family card">Download Family Card</button>
+            </div>
+        </div>
+        <p class="reminder" id="reminderMsg" style="display:none;"> Screenshot this image for your phone lock screen — it increases visibility during emergencies.</p>
+    </form>
+</div>
+<button class="help-btn" aria-label="Show help/FAQ" onclick="toggleHelpSidebar()">?</button>
+<div class="help-sidebar" id="helpSidebar" role="complementary" aria-label="Help sidebar">
+    <h3 style="color:#e60028; margin-top:0;">Need Help?</h3>
+    <ul style="padding-left:18px;">
+        <li><b>Fridge Card:</b> For kitchen, entry, or wallet. Shows QR and key info.</li>
+        <li><b>Family Card:</b> For bedside, living room, or sharing with caregivers.</li>
+        <li>Use clear, bright photos for best results.</li>
+        <li>Tap <b>Download</b> or screenshot for your phone lock screen.</li>
+        <li>All info is private and never shared without your consent.</li>
+    </ul>
+    <p style="color:#5f6a72; font-size:1em;">For more help, contact AXA support.</p>
+</div>
+<script>
+(function () {
+    // Declare all variables in module scope only once
+    const fridgeCheck = document.getElementById('fridgeCardCheck');
+    const familyCheck = document.getElementById('familyCardCheck');
+    const fridgeUpload = document.getElementById('fridgePhotoUpload');
+    const familyUpload = document.getElementById('familyPhotoUpload');
+    const fridgeFile = document.getElementById('fridgePhotoFile');
+    const familyFile = document.getElementById('familyPhotoFile');
+    const fridgePreview = document.getElementById('fridgePreview');
+    const familyPreview = document.getElementById('familyPreview');
+    const fridgePreviewWrap = document.getElementById('fridgePreviewWrap');
+    const familyPreviewWrap = document.getElementById('familyPreviewWrap');
+    const fridgeDownloadBtn = document.getElementById('fridgeDownloadBtn');
+    const familyDownloadBtn = document.getElementById('familyDownloadBtn');
+    const reminderMsg = document.getElementById('reminderMsg');
+    const generateBtn = document.getElementById('generateBtn');
+    const spinner = document.getElementById('spinner');
+
+    function updateUploads() {
+        fridgeUpload.style.display = fridgeCheck.checked ? '' : 'none';
+        familyUpload.style.display = familyCheck.checked ? '' : 'none';
+    }
+    fridgeCheck.addEventListener('change', updateUploads);
+    familyCheck.addEventListener('change', updateUploads);
+
+    window.toggleHelpSidebar = function () {
+        const sidebar = document.getElementById('helpSidebar');
+        sidebar.classList.toggle('active');
+    };
+
+    function showError(msg) {
+        alert(msg);
+    }
+
+    window.generateCards = async function () {
+        fridgePreviewWrap.style.display = 'none';
+        familyPreviewWrap.style.display = 'none';
+        fridgePreview.style.display = 'none';
+        familyPreview.style.display = 'none';
+        fridgeDownloadBtn.style.display = 'none';
+        familyDownloadBtn.style.display = 'none';
+        reminderMsg.style.display = 'none';
+        spinner.style.display = 'block';
+        generateBtn.disabled = true;
+        let hasCard = false;
+        try {
+            if (fridgeCheck.checked && fridgeFile.files.length > 0) {
+                hasCard = true;
+                const formData = new FormData();
+                formData.append('card_type', 'fridge');
+                formData.append('photo', fridgeFile.files[0]);
+                const resp = await fetch('/generate-qr-card', { method: 'POST', body: formData });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    fridgePreview.src = data.image_url;
+                    fridgePreview.style.display = '';
+                    fridgePreviewWrap.style.display = '';
+                    fridgeDownloadBtn.style.display = '';
+                    fridgeDownloadBtn.onclick = () => downloadImage(data.image_url, 'fridge_card.png');
+                } else { showError('Error generating fridge card.'); }
+            }
+            if (familyCheck.checked && familyFile.files.length > 0) {
+                hasCard = true;
+                const formData = new FormData();
+                formData.append('card_type', 'family');
+                formData.append('photo', familyFile.files[0]);
+                const resp = await fetch('/generate-qr-card', { method: 'POST', body: formData });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    familyPreview.src = data.image_url;
+                    familyPreview.style.display = '';
+                    familyPreviewWrap.style.display = '';
+                    familyDownloadBtn.style.display = '';
+                    familyDownloadBtn.onclick = () => downloadImage(data.image_url, 'family_card.png');
+                } else { showError('Error generating family card.'); }
+            }
+            if (hasCard) {
+                reminderMsg.style.display = '';
+            }
+        } catch (e) {
+            showError('Network or server error.');
+        }
+        spinner.style.display = 'none';
+        generateBtn.disabled = false;
+    };
+
+    function downloadImage(url, filename) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    window.onload = () => {
+        fridgeFile.focus();
+    };
+})();
+</script>
+
+{% endblock %}
+
+        html, body {
+            background: #fff;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #222;
+            margin: 0; padding: 0;
+            font-size: 16pt;
+        }
+        .container {
+            max-width: 540px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+            padding: 32px 24px 24px 24px;
+        }
+        h2 {
+            color: #e60028;
+            margin-bottom: 12px;
+            font-size: 1.4em;
+        }
+        label {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        input[type="file"] {
+            margin-top: 8px;
+            font-size: 1em;
+        }
+        button {
+            background: #e60028;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 16px 24px;
+            font-size: 1.2em;
+            margin-top: 24px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 340px;
+            display: block;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .preview {
+            margin-top: 20px;
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.09);
+        }
+        .reminder {
+            color: #5f6a72;
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 12px 2vw 18px 2vw;
+                margin: 10px auto;
+            }
+            button {
+                font-size: 1em;
+                padding: 12px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Choose Your QR Card(s)</h2>
+    <label><input type="checkbox" id="fridgeCardCheck"> Fridge Magnet Card</label><br>
+    <label><input type="checkbox" id="familyCardCheck"> Framed Family Photo Card</label>
+
+    <div id="fridgePhotoUpload" style="display:none; margin-top:16px;">
+        <label>Upload Image for Fridge Card:</label><br>
+        <input type="file" accept="image/*" id="fridgePhotoFile" autofocus>
+    </div>
+    <div id="familyPhotoUpload" style="display:none; margin-top:16px;">
+        <label>Upload Family Photo for Framed Card:</label><br>
+        <input type="file" accept="image/*" id="familyPhotoFile">
+    </div>
+    <button onclick="generateCards()" id="generateBtn" style="touch-action: manipulation;">Generate Cards</button>
+    <div style="margin-top:24px;">
+    <img id="fridgePreview" class="preview" style="display:none;" alt="Fridge QR preview">
+    <img id="familyPreview" class="preview" style="display:none;" alt="Family QR preview">
+</div>
+<p class="reminder" id="reminderMsg" style="display:none;">📱 Screenshot this image for your phone lock screen — it increases visibility during emergencies.</p>
+</div>
+<script>
+const fridgeCheck = document.getElementById('fridgeCardCheck');
+const familyCheck = document.getElementById('familyCardCheck');
+const fridgeUpload = document.getElementById('fridgePhotoUpload');
+const familyUpload = document.getElementById('familyPhotoUpload');
+const fridgeFile = document.getElementById('fridgePhotoFile');
+const familyFile = document.getElementById('familyPhotoFile');
+const fridgePreview = document.getElementById('fridgePreview');
+const familyPreview = document.getElementById('familyPreview');
+const reminderMsg = document.getElementById('reminderMsg');
+const generateBtn = document.getElementById('generateBtn');
+
+function updateUploads() {
+    fridgeUpload.style.display = fridgeCheck.checked ? '' : 'none';
+    familyUpload.style.display = familyCheck.checked ? '' : 'none';
+}
+fridgeCheck.addEventListener('change', updateUploads);
+familyCheck.addEventListener('change', updateUploads);
+
+async function generateCards() {
+    fridgePreview.style.display = 'none';
+    familyPreview.style.display = 'none';
+    reminderMsg.style.display = 'none';
+    generateBtn.disabled = true;
+    let hasCard = false;
+    if (fridgeCheck.checked && fridgeFile.files.length > 0) {
+        hasCard = true;
+        const formData = new FormData();
+        formData.append('card_type', 'fridge');
+        formData.append('photo', fridgeFile.files[0]);
+        const resp = await fetch('/generate-qr-card', { method: 'POST', body: formData });
+        if (resp.ok) {
+            const data = await resp.json();
+            fridgePreview.src = data.image_url;
+            fridgePreview.style.display = '';
+        }
+    }
+    if (familyCheck.checked && familyFile.files.length > 0) {
+        hasCard = true;
+        const formData = new FormData();
+        formData.append('card_type', 'family');
+        formData.append('photo', familyFile.files[0]);
+        const resp = await fetch('/generate-qr-card', { method: 'POST', body: formData });
+        if (resp.ok) {
+            const data = await resp.json();
+            familyPreview.src = data.image_url;
+            familyPreview.style.display = '';
+        }
+    }
+    if (hasCard) {
+        reminderMsg.style.display = '';
+    }
+    generateBtn.disabled = false;
+}
+</script>
+</body>
+</html>

@@ -1,4 +1,21 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
+{% block title %}Room Scan Upload - AXA{% endblock %}
+{% block content %}
+<div class="axa-card">
+    <div class="axa-section-title">Upload a Room Scan</div>
+    <form id="scanUploadForm" aria-label="Room Scan Upload" enctype="multipart/form-data" autocomplete="on">
+        <label for="scanFile">Photo or Video of Room</label>
+        <input type="file" id="scanFile" name="scanFile" accept="image/*,video/*" required aria-label="Room scan file">
+        <label for="notes">Notes (optional)</label>
+        <textarea id="notes" name="notes" rows="2" aria-label="Notes"></textarea>
+        <button type="submit" class="axa-btn">Upload Scan</button>
+    </form>
+    <div style="margin-top:18px; color:#5f6a72; font-size:1em;">
+        <b>Tip:</b> Upload clear images or videos to help assess room safety and hazards for elderly care.
+    </div>
+</div>
+{% endblock %}
+
 <html lang="en">
 <head>
   <meta charset="UTF-8">

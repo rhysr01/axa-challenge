@@ -1,4 +1,27 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
+{% block title %}Profile Form - AXA{% endblock %}
+{% block content %}
+<div class="axa-card">
+    <div class="axa-section-title">Your Health Profile</div>
+    <form id="profileForm" aria-label="Profile Form" autocomplete="on">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" required aria-label="Full Name">
+        <label for="dob">Date of Birth</label>
+        <input type="date" id="dob" name="dob" required aria-label="Date of Birth">
+        <label for="emergency_contact">Emergency Contact</label>
+        <input type="text" id="emergency_contact" name="emergency_contact" required aria-label="Emergency Contact">
+        <label for="conditions">Medical Conditions</label>
+        <textarea id="conditions" name="conditions" rows="2" aria-label="Medical Conditions"></textarea>
+        <label for="care_directives">Care Directives</label>
+        <textarea id="care_directives" name="care_directives" rows="2" aria-label="Care Directives"></textarea>
+        <button type="submit" class="axa-btn">Save Profile</button>
+    </form>
+    <div style="margin-top:18px; color:#5f6a72; font-size:1em;">
+        <b>Tip:</b> Keep this profile up to date to help caregivers and emergency responders assist you better.
+    </div>
+</div>
+{% endblock %}
+
 <html lang="en">
 <head>
   <meta charset="UTF-8">

@@ -1,0 +1,22 @@
+{
+  "score": 72,
+  "riskLevel": "High",
+  "color": "red",
+  "hazards": [
+    {
+      "object": "cord",
+      "location": "hallway",
+      "base_score": 12,
+      "final_score": 24,
+      "reason": "Mobility and cognition increase risk"
+    },
+    {
+      "object": "rug",
+      "location": "bedroom",
+      "base_score": 10,
+      "final_score": 20,
+      "reason": "Mobility increases risk"
+    }
+  ],
+  "recommendation": "Remove loose cords and rugs; re-scan in 30 days"
+}

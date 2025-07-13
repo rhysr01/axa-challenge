@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}QR Scan Logs - AXA{% endblock %}
+{% block content %}
+<div class="axa-card">
+    <div class="axa-section-title">QR Scan Logs</div>
+    <div style="margin-bottom:14px; color:#5f6a72; font-size:1em;">View and filter all QR scan events for compliance and safety monitoring.</div>
+    <form id="logFilterForm" style="margin-bottom:18px;">
+        <label for="filterUser">Filter by User ID</label>
+        <input type="text" id="filterUser" name="filterUser" aria-label="Filter by User ID">
+        <label for="filterType">Filter by QR Type</label>
+        <select id="filterType" name="filterType" aria-label="Filter by QR Type">
+            <option value="">All</option>
+            <option value="basic">Basic</option>
+            <option value="full">Full</option>
+        </select>
+        <button type="button" class="axa-btn" onclick="filterLogs()">Apply Filter</button>
+    </form>
+    <div style="overflow-x:auto;">
+        <table id="logsTable" style="width:100%; font-size:1em; border-collapse:collapse;">
+            <thead>
+                <tr style="background:#e60028; color:#fff;">
+                    <th>Date</th>
+                    <th>User ID</th>
+                    <th>QR Type</th>
+                    <th>Token/ID</th>
+                    <th>IP</th>
+                    <th>Fields Shown</th>
+                    <th>Outcome</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Log rows will be injected here -->
+            </tbody>
+        </table>
+    </div>
+    <button class="axa-btn" type="button" onclick="exportCSV()" style="margin-top:18px;">Export to CSV</button>
+</div>
+<script>
+// Dummy data for demo; replace with AJAX fetch in production
+const logs = [
+    {date: '2025-07-12 14:22', user: 'maria', type: 'basic', token: 'N/A', ip: '192.168.1.2', fields: 'name, risk_score', outcome: 'success'},
+    {date: '2025-07-12 15:10', user: 'maria', type: 'full', token: 'abcd-1234', ip: '192.168.1.2', fields: 'all', outcome: 'success'},
+    {date: '2025-07-12 16:05', user: 'john', type: 'basic', token: 'N/A', ip: '192.168.1.3', fields: 'name', outcome: 'success'},
+];
+
+function renderLogs(filtered) {
+    const tbody = document.querySelector('#logsTable tbody');
+    tbody.innerHTML = '';
+    filtered.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${row.date}</td><td>${row.user}</td><td>${row.type}</td><td>${row.token}</td><td>${row.ip}</td><td>${row.fields}</td><td>${row.outcome}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+function filterLogs() {
+    const user = document.getElementById('filterUser').value.trim().toLowerCase();
+    const type = document.getElementById('filterType').value;
+    const filtered = logs.filter(l =>
+        (!user || l.user.toLowerCase().includes(user)) &&
+        (!type || l.type === type)
+    );
+    renderLogs(filtered);
+}
+function exportCSV() {
+    let csv = 'Date,User ID,QR Type,Token/ID,IP,Fields Shown,Outcome\n';
+    logs.forEach(l => {
+        csv += `${l.date},${l.user},${l.type},${l.token},${l.ip},${l.fields},${l.outcome}\n`;
+    });
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'qr_scan_logs.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+window.onload = function() { renderLogs(logs); };
+</script>
+{% endblock %}
