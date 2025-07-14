@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}AXA ADAPT - Home Safety Assessment{% endblock %}
+
+{% block extra_css %}
+<style>
+    .assessment-intro {
+        background: white;
+        border-radius: 12px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    .assessment-steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    .step-card {
+        background: #f8fafc;
+        border-left: 4px solid #0066CC;
+        border-radius: 8px;
+        padding: 1.5rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .step-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 12px rgba(0, 102, 204, 0.1);
+    }
+    
+    .step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        background-color: #0066CC;
+        color: white;
+        border-radius: 50%;
+        font-weight: 600;
+        margin-right: 0.75rem;
+    }
+    
+    .step-title {
+        font-size: 1.25rem;
+        color: #1a1a1a;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .step-description {
+        color: #4a5568;
+        line-height: 1.6;
+        margin-bottom: 1.25rem;
+    }
+    
+    .btn-start {
+        background-color: #0066CC;
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        transition: background-color 0.2s ease;
+    }
+    
+    .btn-start:hover {
+        background-color: #0052a3;
+        color: white;
+    }
+    
+    .btn-start i {
+        margin-left: 0.5rem;
+        font-size: 1.25rem;
+    }
+    
+    .benefits-list {
+        margin: 2rem 0;
+        padding-left: 1.5rem;
+    }
+    
+    .benefits-list li {
+        margin-bottom: 0.75rem;
+        position: relative;
+        padding-left: 1.5rem;
+    }
+    
+    .benefits-list li:before {
+        content: "✓";
+        color: #00A651;
+        font-weight: bold;
+        position: absolute;
+        left: 0;
+    }
+    
+    @media (max-width: 768px) {
+        .assessment-steps {
+            grid-template-columns: 1fr;
+        }
+        
+        .assessment-intro {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="assessment-intro">
+        <h1 class="text-3xl font-bold text-axa-blue mb-4">Home Safety Assessment</h1>
+        <p class="text-lg text-gray-700 mb-6">
+            Our ADAPT tool helps you identify potential fall hazards in your home with a simple photo-based assessment.
+            In just a few minutes, you'll receive personalized recommendations to make your living space safer.
+        </p>
+        
+        <h2 class="text-2xl font-semibold text-axa-blue mb-4">How It Works</h2>
+        
+        <div class="assessment-steps">
+            <div class="step-card">
+                <h3 class="step-title"><span class="step-number">1</span> Take Photos</h3>
+                <p class="step-description">Capture images of key areas in your home, including the living room, bedroom, bathroom, and hallways.</p>
+            </div>
+            
+            <div class="step-card">
+                <h3 class="step-title"><span class="step-number">2</span> Answer Questions</h3>
+                <p class="step-description">Provide some basic information about your mobility and health to help us personalize the assessment.</p>
+            </div>
+            
+            <div class="step-card">
+                <h3 class="step-title"><span class="step-number">3</span> Get Results</h3>
+                <p class="step-description">Receive a detailed report with identified hazards, risk levels, and actionable recommendations.</p>
+            </div>
+        </div>
+        
+        <div class="mt-8">
+            <h3 class="text-xl font-semibold text-axa-blue mb-3">Benefits of Completing This Assessment:</h3>
+            <ul class="benefits-list text-gray-700">
+                <li>Identify potential fall hazards before they cause harm</li>
+                <li>Receive personalized recommendations based on your specific needs</li>
+                <li>Create a safer living environment for you or your loved ones</li>
+                <li>Peace of mind knowing your home is as safe as possible</li>
+            </ul>
+        </div>
+        
+        <div class="mt-8 text-center">
+            <a href="{{ url_for('start_assessment') }}" class="btn-start">
+                Start Assessment <i class="bi bi-arrow-right"></i>
+            </a>
+            <p class="text-sm text-gray-500 mt-3">Takes approximately 5-7 minutes to complete</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Any additional JavaScript for the assessment start page can go here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize any interactive elements
+    });
+</script>
+{% endblock %}

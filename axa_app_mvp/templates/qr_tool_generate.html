@@ -1,0 +1,587 @@
+{% extends "base.html" %}
+
+{% block title %}AXA ADAPT - Your QR Code is Ready{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+    .success-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 2px 8px rgba(0, 51, 102, 0.1);
+        margin-bottom: 2rem;
+        text-align: center;
+        border: 1px solid rgba(0, 102, 204, 0.1);
+    }
+    
+    .success-icon {
+        width: 100px;
+        height: 100px;
+        background: rgba(0, 166, 81, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        border: 3px solid var(--axa-success);
+        box-shadow: 0 4px 12px rgba(0, 166, 81, 0.15);
+    }
+    
+    .success-icon i {
+        color: var(--axa-success);
+        font-size: 3rem;
+    }
+    
+    .form-title {
+        color: var(--axa-dark-blue);
+        font-weight: 700;
+        margin-bottom: 1.25rem;
+        font-size: 2rem;
+    }
+    
+    .form-subtitle {
+        color: var(--axa-gray);
+        font-size: 1.15rem;
+        margin-bottom: 2.5rem;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.6;
+    }
+    .qr-code-container {
+        background: white;
+        border: 1px solid rgba(0, 102, 204, 0.1);
+        border-radius: 12px;
+        padding: 2rem;
+        margin: 2.5rem auto;
+        max-width: 320px;
+        box-shadow: 0 4px 20px rgba(0, 51, 102, 0.08);
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    .qr-code-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 51, 102, 0.12);
+    }
+    .qr-code {
+        width: 100%;
+        height: auto;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 102, 204, 0.1);
+    }
+    .qr-placeholder {
+        width: 100%;
+        height: 250px;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        color: #6c757d;
+    }
+    .qr-details {
+        text-align: left;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #f0f0f0;
+    }
+    .detail-item {
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+    }
+    .detail-label {
+        color: #5f6a72;
+        font-weight: 500;
+    }
+    .detail-value {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    .privacy-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .badge-public {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+    .badge-private {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 2.5rem;
+        justify-content: center;
+    }
+    .action-buttons .btn {
+        min-width: 180px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .action-buttons .btn i {
+        margin-right: 0.5rem;
+        font-size: 1.1em;
+    }
+    .btn-download {
+        background-color: var(--axa-blue);
+        border-color: var(--axa-blue);
+    }
+    .btn-download:hover {
+        background-color: #0052a3;
+        border-color: #0052a3;
+    }
+    .btn-print {
+        background-color: white;
+        color: var(--axa-blue);
+        border: 1px solid var(--axa-blue);
+    }
+    .btn-print:hover {
+        background-color: rgba(0, 102, 204, 0.05);
+    }
+    .btn-share {
+        background-color: var(--axa-dark-blue);
+        border-color: var(--axa-dark-blue);
+    }
+    .btn-share:hover {
+        background-color: #002b59;
+        border-color: #002b59;
+    }
+    .info-box {
+        background: rgba(0, 102, 204, 0.05);
+        border-radius: 12px;
+        padding: 1.75rem;
+        margin: 2.5rem 0 1.5rem;
+        text-align: left;
+        border-left: 4px solid var(--axa-blue);
+    }
+    .info-box h4 {
+        color: var(--axa-dark-blue);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    .info-box h4 i {
+        margin-right: 0.75rem;
+        color: var(--axa-blue);
+    }
+    .info-box ul {
+        padding-left: 1.5rem;
+        margin-bottom: 0;
+    }
+    .info-box li {
+        margin-bottom: 0.5rem;
+        color: var(--axa-text);
+    }
+    .info-box li:last-child {
+        margin-bottom: 0;
+    }
+    .tips-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+    .tip-item {
+        display: flex;
+        margin-bottom: 1rem;
+        align-items: flex-start;
+    }
+    .tip-icon {
+        color: #e60028;
+        margin-right: 0.75rem;
+        margin-top: 0.25rem;
+    }
+    
+    /* Card Personalization Section */
+    .card-personalization-section {
+        margin: 3rem 0;
+    }
+    
+    .card-personalization-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .card-personalization-header h2 {
+        color: var(--axa-dark-blue);
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .card-personalization-header p {
+        color: var(--axa-gray);
+        max-width: 700px;
+        margin: 0 auto 2rem;
+        line-height: 1.6;
+    }
+    .tip-content h5 {
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+        color: #2c3e50;
+    }
+    .tip-content p {
+        color: #5f6a72;
+        margin-bottom: 0;
+        font-size: 0.95rem;
+    }
+    .back-to-home {
+        display: inline-block;
+        margin-top: 1.5rem;
+        color: #5f6a72;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .back-to-home:hover {
+        color: #2c3e50;
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Progress Indicator -->
+    <div class="step-indicator mb-5">
+        <div class="step completed">
+            <i class="bi bi-check"></i>
+            <span class="step-text">Your Info</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step completed">
+            <i class="bi bi-check"></i>
+            <span class="step-text">QR Content</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step completed">
+            <i class="bi bi-check"></i>
+            <span class="step-text">Privacy</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step active">
+            4
+            <span class="step-text">Download</span>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="success-section">
+                <div class="success-icon">
+                    <i class="bi bi-check-lg"></i>
+                </div>
+                <h1 class="form-title">Your QR Code is Ready!</h1>
+                <p class="form-subtitle">Scan this QR code with any smartphone camera to view the emergency health information you've shared.</p>
+                
+                <!-- Card Personalization Section -->
+                <div class="card-personalization-section">
+                    <div class="card-personalization-header">
+                        <h2>Personalize Your QR Card</h2>
+                        <p>Customize the appearance of your QR card before downloading or printing. Make it easily recognizable and unique to you.</p>
+                    </div>
+                    
+                    <!-- Include the card personalization component -->
+                    {% include 'includes/card_personalization.html' %}
+                </div>
+                
+                <div class="qr-code-container">
+                    <img src="{{ qr_code_url }}" alt="QR Code" class="qr-code" id="qrCodeImage">
+                    <p class="text-muted mb-0" style="font-size: 0.95rem;">
+                        <i class="bi bi-phone me-1"></i> Scan with any smartphone camera
+                    </p>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-download text-white" id="downloadBtn">
+                        <i class="bi bi-download"></i> Download QR Code
+                    </button>
+                    <button class="btn btn-print" id="printBtn">
+                        <i class="bi bi-printer"></i> Print
+                    </button>
+                    <button class="btn btn-share text-white" id="shareBtn">
+                        <i class="bi bi-share"></i> Share
+                    </button>
+                </div>
+
+                <div class="usage-tips">
+                    <h4 class="tips-title">
+                        <i class="bi bi-lightbulb"></i> How to Use Your QR Code
+                    </h4>
+                    <div class="tip-item">
+                        <div class="tip-icon">
+                            <i class="bi bi-phone"></i>
+                        </div>
+                        <div class="tip-content">
+                            <h5>Save to Your Phone</h5>
+                            <p>Add the QR code to your phone's wallet or save it to your photos for quick access.</p>
+                        </div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="info-box">
+                            <h4><i class="bi bi-lightbulb"></i> Tips for using your QR code:</h4>
+                            <ul>
+                                <li><strong>Print a copy</strong> to keep in your wallet, purse, or medical alert bracelet</li>
+                                <li><strong>Save to your phone</strong> for quick access in emergencies</li>
+                                <li><strong>Share with trusted contacts</strong> like family members or caregivers</li>
+                                <li><strong>Display in visible locations</strong> such as your refrigerator or car visor</li>
+                                <li><strong>Update regularly</strong> when your health information changes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="{{ url_for('home') }}" class="back-to-home">
+                    <i class="bi bi-arrow-left"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show the QR code image once it's loaded
+        const qrImage = document.getElementById('qrCodeImage');
+        const qrPlaceholder = document.getElementById('qrPlaceholder');
+        
+        if (qrImage) {
+            qrImage.onload = function() {
+                qrPlaceholder.style.display = 'none';
+                qrImage.style.display = 'block';
+            };
+            // Trigger load in case the image is already cached
+            if (qrImage.complete) {
+                qrImage.onload();
+            }
+        }
+        
+        // Download button functionality
+        const downloadBtn = document.getElementById('downloadBtn');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', function() {
+                // In a real implementation, this would trigger the download of the QR code
+                alert('In a real implementation, this would download the QR code image.');
+            });
+        }
+        
+        // Share button functionality
+        document.getElementById('shareBtn').addEventListener('click', async function() {
+            const shareData = {
+                title: 'My Health Information QR Code',
+                text: 'Scan this QR code to access my health information in case of emergency.',
+                url: '{{ qr_code_url }}',
+            };
+
+            try {
+                if (navigator.share) {
+                    // Use Web Share API if available
+                    await navigator.share(shareData);
+                } else if (navigator.clipboard) {
+                    // Fallback: Copy to clipboard
+                    await navigator.clipboard.writeText(shareData.url);
+                    
+                    // Show a nice toast notification
+                    const toast = document.createElement('div');
+                    toast.textContent = 'Link copied to clipboard!';
+                    toast.style.position = 'fixed';
+                    toast.style.bottom = '20px';
+                    toast.style.left = '50%';
+                    toast.style.transform = 'translateX(-50%)';
+                    toast.style.backgroundColor = '#333';
+                    toast.style.color = 'white';
+                    toast.style.padding = '12px 24px';
+                    toast.style.borderRadius = '50px';
+                    toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                    toast.style.zIndex = '1000';
+                    toast.style.transition = 'opacity 0.3s';
+                    toast.style.opacity = '0';
+                    
+                    document.body.appendChild(toast);
+                    
+                    // Trigger reflow
+                    toast.offsetHeight;
+                    
+                    // Fade in
+                    toast.style.opacity = '1';
+                    
+                    // Remove after delay
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        setTimeout(() => {
+                            document.body.removeChild(toast);
+                        }, 300);
+                    }, 3000);
+                } else {
+                    // Last resort fallback
+                    prompt('Copy this link to share:', shareData.url);
+                }
+            } catch (err) {
+                console.error('Error sharing:', err);
+                // Fallback to basic prompt if Web Share API fails
+                prompt('Copy this link to share:', shareData.url);
+            }
+        });
+        
+        // Print button functionality
+        // Function to handle print functionality
+        function setupPrintFunctionality() {
+            const printBtn = document.getElementById('printBtn');
+            if (!printBtn) return;
+
+            printBtn.addEventListener('click', function() {
+                // Open print dialog with focus on QR code
+                const printWindow = window.open('', '_blank');
+                const printContent = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Print QR Code</title>
+                        <style>
+                            body {
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                height: 100vh;
+                                margin: 0;
+                                padding: 2rem;
+                                background-color: #f5f5f5;
+                            }
+                            .print-container {
+                                text-align: center;
+                                max-width: 100%;
+                                padding: 2rem;
+                                background: white;
+                                border-radius: 12px;
+                                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                            }
+                            .print-title {
+                                color: #0066CC;
+                                margin-bottom: 1.5rem;
+                                font-size: 1.5rem;
+                                font-weight: 600;
+                            }
+                            .print-qr-container {
+                                margin: 1.5rem 0;
+                                padding: 1rem;
+                                background: white;
+                                border: 1px solid #e0e0e0;
+                                border-radius: 8px;
+                                display: inline-block;
+                            }
+                            .print-qr-code {
+                                max-width: 300px;
+                                height: auto;
+                            }
+                            .print-instructions {
+                                margin-top: 1.5rem;
+                                color: #333;
+                                line-height: 1.6;
+                                max-width: 400px;
+                                margin-left: auto;
+                                margin-right: auto;
+                            }
+                            @media print {
+                                body {
+                                    background: white;
+                                    padding: 0.5in;
+                                }
+                                .print-container {
+                                    box-shadow: none;
+                                    padding: 0;
+                                }
+                                .print-qr-container {
+                                    border: none;
+                                    padding: 0;
+                                }
+                                .print-title {
+                                    margin-top: 0;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="print-container">
+                            <h1 class="print-title">AXA ADAPT QR Code</h1>
+                            <div class="print-qr-container">
+                                <img src="${document.getElementById('qrCodeImage').src}" alt="QR Code" class="print-qr-code">
+                            </div>
+                            <div class="print-instructions">
+                                <p>This QR code contains important medical information that can be accessed by emergency responders.</p>
+                                <p>Print and place it in a visible location in your home, or carry it with you.</p>
+                            </div>
+                        </div>
+                        <script>
+                            // Auto-close after printing and trigger print dialog
+                            window.onload = function() {
+                                // Wait a moment to ensure everything is loaded
+                                setTimeout(() => {
+                                    window.print();
+                                }, 100);
+                                
+                                // Close the window after printing is done or cancelled
+                                window.onafterprint = function() {
+                                    window.close();
+                                };
+                            };
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+                
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+            });
+        }
+        
+        // Add print styles
+        function addPrintStyles() {
+            const style = document.createElement('style');
+            style.textContent = `
+                @media print {
+                    .axa-header, .step-indicator, .action-buttons, .back-to-home {
+                        display: none !important;
+                    }
+                    .success-section {
+                        padding: 0;
+                        box-shadow: none;
+                    }
+                    .qr-code-container {
+                        max-width: 100%;
+                        border: none;
+                        box-shadow: none;
+                    }
+                    .qr-code {
+                        max-width: 300px;
+                        height: auto;
+                        margin: 0 auto 1rem;
+                    }
+                    .usage-tips {
+                        page-break-before: always;
+                        padding: 1rem 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        document.head.appendChild(style);
+    });
+</script>
+{% endblock %}

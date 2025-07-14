@@ -2,18 +2,240 @@
 {% block title %}Room Scan Upload - AXA{% endblock %}
 {% block content %}
 <div class="axa-card">
-    <div class="axa-section-title">Upload a Room Scan</div>
-    <form id="scanUploadForm" aria-label="Room Scan Upload" enctype="multipart/form-data" autocomplete="on">
-        <label for="scanFile">Photo or Video of Room</label>
-        <input type="file" id="scanFile" name="scanFile" accept="image/*,video/*" required aria-label="Room scan file">
-        <label for="notes">Notes (optional)</label>
-        <textarea id="notes" name="notes" rows="2" aria-label="Notes"></textarea>
-        <button type="submit" class="axa-btn">Upload Scan</button>
-    </form>
+    <div class="axa-section-title">
+        Upload a Room Scan
+        <span id="offlineBadge" class="offline-badge" style="display: none; margin-left: 10px; background-color: #f39c12; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8em; vertical-align: middle;">
+            <i class="fas fa-cloud-upload-alt"></i> <span id="pendingScansBadge" style="display: none;">0</span>
+        </span>
+    </div>
+    
+    <div id="uploadFormContainer">
+        <form id="scanUploadForm" aria-label="Room Scan Upload" enctype="multipart/form-data" autocomplete="on">
+            <div id="uploadError" class="error-message" style="display: none; margin-bottom: 15px; padding: 10px; border-radius: 4px; background-color: #ffebee; color: #c62828; border-left: 4px solid #c62828;"></div>
+            
+            <div class="form-group">
+                <label for="roomType">Room Type</label>
+                <select id="roomType" name="roomType" class="form-control" required>
+                    <option value="">Select a room type...</option>
+                    <option value="living_room">Living Room</option>
+                    <option value="bedroom">Bedroom</option>
+                    <option value="bathroom">Bathroom</option>
+                    <option value="kitchen">Kitchen</option>
+                    <option value="hallway">Hallway</option>
+                    <option value="stairs">Stairs</option>
+                    <option value="entrance">Entrance</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="scanFile">Photo or Video of Room</label>
+                <div class="file-upload-container" style="border: 2px dashed #e0e0e0; padding: 20px; text-align: center; border-radius: 8px; margin: 10px 0; cursor: pointer;" id="dropZone">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 2em; color: #e0e0e0; margin-bottom: 10px; display: block;"></i>
+                    <p>Click to select files or drag and drop</p>
+                    <p class="small-text" style="font-size: 0.8em; color: #9e9e9e;">Supports JPG, PNG, or MP4 (max 50MB)</p>
+                    <input type="file" id="scanFile" name="scanFile" accept="image/*,video/*" required aria-label="Room scan file" style="display: none;">
+                </div>
+                <div id="fileInfo" style="margin-top: 10px; display: none;">
+                    <i class="fas fa-file-alt"></i> <span id="fileName"></span> 
+                    <button type="button" id="changeFile" class="text-button" style="background: none; border: none; color: #e60028; cursor: pointer; margin-left: 10px;">Change</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="notes">Notes (optional)</label>
+                <textarea id="notes" name="notes" rows="3" class="form-control" aria-label="Notes" placeholder="Add any additional details about this room..."></textarea>
+            </div>
+            
+            <div class="form-actions" style="margin-top: 20px;">
+                <button type="submit" class="axa-btn" id="submitBtn">
+                    <span class="button-text">Upload Scan</span>
+                    <span class="button-icon"><i class="fas fa-upload"></i></span>
+                </button>
+                <div id="uploadProgress" class="progress-container" style="margin-top: 15px; display: none;">
+                    <div class="progress-bar" style="height: 6px; background-color: #e0e0e0; border-radius: 3px; overflow: hidden;">
+                        <div id="progressBar" style="height: 100%; width: 0%; background-color: #4caf50; transition: width 0.3s;"></div>
+                    </div>
+                    <div id="progressText" style="text-align: center; margin-top: 5px; font-size: 0.9em; color: #616161;">Preparing upload...</div>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <div id="successMessage" style="display: none; text-align: center; padding: 20px;">
+        <div style="font-size: 4em; color: #4caf50; margin-bottom: 15px;">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h3>Scan Uploaded Successfully!</h3>
+        <p>Your room scan has been received and is being processed.</p>
+        <button id="uploadAnother" class="axa-btn" style="margin-top: 15px;">
+            <i class="fas fa-plus"></i> Upload Another
+        </button>
+    </div>
+    
+    <div id="offlineScansList" class="offline-scans" style="margin-top: 30px; display: none;">
+        <h3>Pending Uploads <span id="pendingCount" class="badge">0</span></h3>
+        <p>These scans will be uploaded when you're back online.</p>
+        <div id="pendingScansList" class="scans-list">
+            <!-- Pending scans will be listed here -->
+        </div>
+    </div>
+    
     <div style="margin-top:18px; color:#5f6a72; font-size:1em;">
         <b>Tip:</b> Upload clear images or videos to help assess room safety and hazards for elderly care.
     </div>
 </div>
+
+<!-- Hidden template for pending scan items -->
+<template id="pendingScanTemplate">
+    <div class="pending-scan-item" data-id="{{id}}">
+        <div class="scan-preview">
+            <i class="fas fa-image"></i>
+        </div>
+        <div class="scan-details">
+            <div class="scan-name">{{roomType}}</div>
+            <div class="scan-meta">
+                <span class="scan-date">{{date}}</span>
+                <span class="scan-status {{status}}">{{statusText}}</span>
+            </div>
+        </div>
+        <div class="scan-actions">
+            <button class="btn-icon" data-action="retry" title="Retry Upload">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <button class="btn-icon" data-action="delete" title="Delete">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </div>
+</template>
+
+<!-- Include room scan manager and upload script -->
+<script src="/static/room-scan-manager.js"></script>
+<script src="/static/js/room-upload.js"></script>
+
+<style>
+/* Additional styles for the upload form */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+    margin-top: 5px;
+}
+
+.file-upload-container {
+    transition: all 0.3s ease;
+}
+
+.file-upload-container:hover, .file-upload-container.dragover {
+    border-color: #e60028;
+    background-color: #f9f9f9;
+}
+
+.progress-container {
+    margin-top: 15px;
+}
+
+.offline-scans {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.pending-scan-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #f9f9f9;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    border-left: 4px solid #f39c12;
+}
+
+.scan-preview {
+    width: 50px;
+    height: 50px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    color: #9e9e9e;
+}
+
+.scan-details {
+    flex: 1;
+}
+
+.scan-name {
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+.scan-meta {
+    font-size: 0.85em;
+    color: #757575;
+}
+
+.scan-status {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    margin-left: 8px;
+}
+
+.scan-status.pending {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.scan-status.error {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    color: #757575;
+    cursor: pointer;
+    padding: 5px;
+    margin-left: 5px;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background: #f0f0f0;
+    color: #e60028;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .pending-scan-item {
+        flex-wrap: wrap;
+    }
+    
+    .scan-actions {
+        width: 100%;
+        margin-top: 10px;
+        display: flex;
+        justify-content: flex-end;
+    }
+}
+</style>
 {% endblock %}
 
 <html lang="en">
@@ -62,63 +284,6 @@
   <div class="error" id="roomError"></div>
   <div class="loading" id="roomLoading" style="display:none;">Analyzing photos...</div>
   <div class="success" id="roomSuccess" style="display:none;"></div>
-  <script>
-    document.getElementById('roomForm').onsubmit = async function(e) {
-      e.preventDefault();
-      document.getElementById('roomError').textContent = '';
-      document.getElementById('roomLoading').style.display = 'block';
-      document.getElementById('roomSuccess').style.display = 'none';
-      const form = e.target;
-      const formData = new FormData();
-      const rooms = ['sittingRoom', 'bathroom', 'hallway', 'steps', 'bedroom'];
-      for (const room of rooms) {
-        const fileInput = form[room];
-        if (fileInput.files[0]) {
-          formData.append(room, fileInput.files[0]);
-        } else {
-          document.getElementById('roomError').textContent = 'Please upload all room photos.';
-          document.getElementById('roomLoading').style.display = 'none';
-          return;
-        }
-      }
-      try {
-        // STEP 3: Send images to detection API (replace with your backend URL)
-        const detectionResponse = await fetch("https://your-backend.com/process-multi-room", {
-          method: "POST",
-          body: formData
-        });
-        let result;
-        if (detectionResponse.ok) {
-          result = await detectionResponse.json();
-        } else {
-          throw new Error('Detection API error');
-        }
-        // STEP 4: Send hazards + profile to n8n webhook
-        const profile = JSON.parse(window.sessionStorage.getItem("axa_profile") || '{}');
-        const email = window.sessionStorage.getItem("axa_email") || '';
-        if (!profile || !email) {
-          document.getElementById('roomError').textContent = 'Profile or email missing. Please complete Step 1.';
-          document.getElementById('roomLoading').style.display = 'none';
-          return;
-        }
-        await fetch("https://rhysr01.app.n8n.cloud/webhook/axa-fall-scan", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: "axa_001",
-            email,
-            profile,
-            hazards: result.hazards
-          })
-        });
-        document.getElementById('roomSuccess').textContent = "✅ Scan submitted! Your personalized fall risk report will be emailed shortly.";
-        document.getElementById('roomSuccess').style.display = 'block';
-      } catch (err) {
-        document.getElementById('roomError').textContent = 'An error occurred: ' + err.message;
-      } finally {
-        document.getElementById('roomLoading').style.display = 'none';
-      }
-    };
-  </script>
+  <script src="/static/js/new-script.js"></script>
 </body>
 </html>

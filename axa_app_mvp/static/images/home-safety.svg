@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800px" height="600px" viewBox="0 0 800 600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Home Safety Illustration</title>
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="gradient1">
+            <stop stop-color="#0061A8" offset="0%"></stop>
+            <stop stop-color="#003865" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <!-- House -->
+        <g transform="translate(200, 100)">
+            <!-- Main structure -->
+            <rect fill="#F2F2F2" x="100" y="150" width="400" height="300" rx="10"></rect>
+            <polygon fill="#E0E0E0" points="80,150 520,150 300,20"></polygon>
+            
+            <!-- Door -->
+            <rect fill="#8D6E63" x="250" y="300" width="100" height="150" rx="5"></rect>
+            <circle fill="#5D4037" cx="320" cy="390" r="5"></circle>
+            
+            <!-- Windows -->
+            <rect fill="#B3E5FC" x="150" y="200" width="60" height="80" rx="5"></rect>
+            <rect fill="#B3E5FC" x="390" y="200" width="60" height="80" rx="5"></rect>
+            <rect fill="#B3E5FC" x="150" y="350" width="60" height="80" rx="5"></rect>
+            <rect fill="#B3E5FC" x="390" y="350" width="60" height="80" rx="5"></rect>
+            
+            <!-- Window panes -->
+            <line x1="180" y1="200" x2="180" y2="280" stroke="#4FC3F7" stroke-width="2"></line>
+            <line x1="150" y1="230" x2="210" y2="230" stroke="#4FC3F7" stroke-width="2"></line>
+            
+            <line x1="420" y1="200" x2="420" y2="280" stroke="#4FC3F7" stroke-width="2"></line>
+            <line x1="390" y1="230" x2="450" y2="230" stroke="#4FC3F7" stroke-width="2"></line>
+            
+            <line x1="180" y1="350" x2="180" y2="430" stroke="#4FC3F7" stroke-width="2"></line>
+            <line x1="150" y1="380" x2="210" y2="380" stroke="#4FC3F7" stroke-width="2"></line>
+            
+            <line x1="420" y1="350" x2="420" y2="430" stroke="#4FC3F7" stroke-width="2"></line>
+            <line x1="390" y1="380" x2="450" y2="380" stroke="#4FC3F7" stroke-width="2"></line>
+            
+            <!-- Safety elements -->
+            <g transform="translate(250, 50)">
+                <!-- Handrail -->
+                <rect fill="#A1887F" x="0" y="0" width="100" height="10" rx="5"></rect>
+                <rect fill="#8D6E63" x="0" y="10" width="10" height="40"></rect>
+                <rect fill="#8D6E63" x="90" y="10" width="10" height="40"></rect>
+                
+                <!-- Non-slip mat -->
+                <rect fill="#90CAF9" x="120" y="30" width="80" height="10" rx="5"></rect>
+                <line x1="130" y1="35" x2="150" y2="35" stroke="#64B5F6" stroke-width="2"></line>
+                <line x1="170" y1="35" x2="190" y2="35" stroke="#64B5F6" stroke-width="2"></line>
+                
+                <!-- Grab bar -->
+                <rect fill="#BDBDBD" x="220" y="20" width="10" height="40" rx="5"></rect>
+                <rect fill="#9E9E9E" x="230" y="30" width="30" height="5" rx="2"></rect>
+            </g>
+        </g>
+        
+        <!-- Title and subtitle -->
+        <text font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#003366" x="400" y="50" text-anchor="middle">
+            Your Safe Home
+        </text>
+        <text font-family="Arial, sans-serif" font-size="20" fill="#0061A8" x="400" y="90" text-anchor="middle">
+            Fall Prevention & Safety Assessment
+        </text>
+        
+        <!-- Decorative elements -->
+        <circle fill="#FFC107" cx="100" cy="100" r="10" opacity="0.8"></circle>
+        <circle fill="#FF9800" cx="700" cy="80" r="15" opacity="0.8"></circle>
+        <circle fill="#4CAF50" cx="650" cy="500" r="12" opacity="0.8"></circle>
+    </g>
+</svg>

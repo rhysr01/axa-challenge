@@ -1,67 +1,476 @@
 """
 FastAPI app for AXA ADAPT.
 
-Receives 5 room images, runs YOLOv8 detection, and returns structured fall hazards
-(tagged by room, with confidence and severity).
+Receives room images, runs YOLOv8 detection, and returns structured fall hazards
+with risk assessment based on user profile.
 """
 
-from fastapi import FastAPI, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-import numpy as np
+import os
+import json
+import logging
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+from pathlib import Path
+
 import cv2
+import numpy as np
+import os
+import json
+import logging
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Dict, List, Optional, Union
+
+import cv2
+import numpy as np
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Depends, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, FileResponse, HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
 from ultralytics import YOLO
-from axa_app_mvp.logic.qr_utils import generate_secure_url, create_qr_code
+from apscheduler.schedulers.background import BackgroundScheduler
+
+# Import improved core logic
+from axa_app_mvp.logic.hazard_scoring import (
+    load_risk_matrix,
+    load_thresholds,
+    load_detection_mapping,
+    map_detected_objects_to_hazards,
+    score_hazards
+)
+from axa_app_mvp.logic.qr_utils import (
+    generate_secure_url,
+    create_qr_code,
+    validate_token,
+    cleanup_expired_tokens,
+    TokenExpiredError,
+    TokenValidationError,
+    QRCodeError
+)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Constants
+BASE_DIR = Path(__file__).parent
+OUTPUT_DIR = BASE_DIR / "outputs"
+PROFILES_DIR = BASE_DIR / "axa_app_mvp" / "profiles"
+MODEL_PATH = BASE_DIR / "models" / "yolov8n.pt"  # Update with your model path
+
+# Ensure required directories exist
+OUTPUT_DIR.mkdir(exist_ok=True)
+PROFILES_DIR.mkdir(exist_ok=True, parents=True)
+
+# Initialize FastAPI app
+app = FastAPI()
+
+# Setup templates
+templates = Jinja2Templates(directory="axa_app_mvp/templates")
+
+# Allow all origins for now (CORS)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount static files directory
+app.mount("/static", StaticFiles(directory="axa_app_mvp/static"), name="static")
+app.mount("/static/images", StaticFiles(directory="axa_app_mvp/static/images"), name="images")
+
+# Initialize scheduler
+scheduler = BackgroundScheduler()
+scheduler.start()
+
+# Load YOLO model (lazy load on first request)
+model = None
+def get_model():
+    global model
+    if model is None:
+        try:
+            model = YOLO(str(MODEL_PATH))
+            logger.info(f"Loaded YOLO model from {MODEL_PATH}")
+        except Exception as e:
+            logger.error(f"Failed to load YOLO model: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to load object detection model"
+            )
+    return model
+
+# Pydantic models for request/response validation
+class UserProfile(BaseModel):
+    id: str
+    name: str
+    mobility: bool = False
+    vision: bool = False
+    cognition: bool = False
+    age: Optional[int] = None
+    conditions: List[str] = []
+
+class HazardDetectionRequest(BaseModel):
+    profile: UserProfile
+    room_images: List[Dict[str, str]]  # List of dicts with 'room' and 'image_url' or 'image_base64'
+
+class QRGenerateRequest(BaseModel):
+    user_id: str
+    access_type: str = "medical_summary"
+    expiry_hours: int = 24
+    metadata: Optional[Dict] = None
+
+# Helper functions
+def load_user_profile(user_id: str) -> Dict:
+    """Load user profile from file."""
+    profile_path = PROFILES_DIR / f"health_profile_{user_id}.json"
+    try:
+        with open(profile_path, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        logger.warning(f"Profile not found for user {user_id}")
+        # Return a default profile for demo purposes
+        return {
+            "id": user_id,
+            "name": "Demo User",
+            "mobility": False,
+            "vision": False,
+            "cognition": False,
+            "age": 65,
+            "conditions": []
+        }
+    except json.JSONDecodeError:
+        logger.error(f"Invalid profile JSON for user {user_id}")
+        raise HTTPException(status_code=500, detail="Invalid profile data")
+
+# API Endpoints
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    """
+    Serve the home page.
+    """
+    return templates.TemplateResponse("home.html", {"request": request})
+
+@app.get("/assess", response_class=HTMLResponse)
+async def start_assessment(request: Request):
+    """
+    Serve the assessment start page.
+    """
+    return templates.TemplateResponse("room_scan_upload.html", {"request": request})
+
+@app.get("/qr", response_class=HTMLResponse)
+async def qr_tools(request: Request):
+    """
+    Serve the QR tools page.
+    """
+    return templates.TemplateResponse("qr_card_generator.html", {"request": request})
+
+@app.get("/qr-tool/start", response_class=HTMLResponse)
+async def qr_tool_start(request: Request):
+    """
+    Start the QR code creation process.
+    """
+    return templates.TemplateResponse("qr_tool_start.html", {"request": request})
+
+@app.post("/qr-tool/content")
+async def qr_tool_content(
+    request: Request,
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    date_of_birth: str = Form(...),
+    conditions: List[str] = Form([]),
+    medications: str = Form(""),
+    allergies: str = Form(""),
+    emergency_contact: str = Form(...),
+    emergency_phone: str = Form(...),
+    relationship: str = Form(...)
+):
+    """
+    Process the profile form and show the content selection screen.
+    """
+    # In a real app, you would validate the form data here
+    # and possibly save it to a database or session
+    
+    # For now, we'll just pass the form data to the template
+    form_data = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "date_of_birth": date_of_birth,
+        "conditions": conditions,
+        "medications": medications,
+        "allergies": allergies,
+        "emergency_contact": emergency_contact,
+        "emergency_phone": emergency_phone,
+        "relationship": relationship,
+        # Calculate age from date of birth for display
+        "age": (datetime.now().date() - datetime.strptime(date_of_birth, "%Y-%m-%d").date()).days // 365
+    }
+    
+    return templates.TemplateResponse(
+        "qr_tool_content.html",
+        {"request": request, "form_data": form_data}
+    )
+
+@app.post("/qr-tool/privacy")
+async def qr_tool_privacy(
+    request: Request,
+    # Profile data
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    date_of_birth: str = Form(...),
+    conditions: List[str] = Form([]),
+    medications: str = Form(""),
+    allergies: str = Form(""),
+    emergency_contact: str = Form(...),
+    emergency_phone: str = Form(...),
+    relationship: str = Form(...),
+    # Content selection
+    include_medical: bool = Form(False),
+    include_medications: bool = Form(False),
+    include_allergies: bool = Form(False),
+    include_emergency: bool = Form(False)
+):
+    """
+    Process the content selection and show the privacy settings screen.
+    """
+    form_data = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "date_of_birth": date_of_birth,
+        "conditions": conditions,
+        "medications": medications,
+        "allergies": allergies,
+        "emergency_contact": emergency_contact,
+        "emergency_phone": emergency_phone,
+        "relationship": relationship,
+        "include_medical": include_medical,
+        "include_medications": include_medications,
+        "include_allergies": include_allergies,
+        "include_emergency": include_emergency
+    }
+    
+    return templates.TemplateResponse(
+        "qr_tool_privacy.html",
+        {"request": request, "form_data": form_data, "today": datetime.now().strftime("%Y-%m-%d")}
+    )
+
+@app.post("/qr-tool/generate")
+async def qr_tool_generate(
+    request: Request,
+    # Profile data
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    date_of_birth: str = Form(...),
+    conditions: List[str] = Form([]),
+    medications: str = Form(""),
+    allergies: str = Form(""),
+    emergency_contact: str = Form(...),
+    emergency_phone: str = Form(...),
+    relationship: str = Form(...),
+    # Content selection
+    include_medical: bool = Form(False),
+    include_medications: bool = Form(False),
+    include_allergies: bool = Form(False),
+    include_emergency: bool = Form(False),
+    # Privacy settings
+    privacy: str = Form(...),
+    expiry: str = Form("24"),
+    custom_expiry_date: Optional[str] = Form(None)
+):
+    """
+    Generate the QR code and show the final screen.
+    """
+    # Process expiry
+    expiry_date = None
+    if privacy == "private":
+        if expiry == "custom" and custom_expiry_date:
+            expiry_date = datetime.strptime(custom_expiry_date, "%Y-%m-%d").date()
+        else:
+            hours = int(expiry) if expiry.isdigit() else 24
+            expiry_date = datetime.utcnow() + timedelta(hours=hours)
+    
+    # Generate a unique ID for this QR code
+    qr_id = str(uuid.uuid4())
+    
+    # Prepare the data to be stored
+    qr_data = {
+        "id": qr_id,
+        "created_at": datetime.utcnow().isoformat(),
+        "expires_at": expiry_date.isoformat() if expiry_date else None,
+        "privacy": privacy,
+        "profile": {
+            "first_name": first_name,
+            "last_name": last_name,
+            "date_of_birth": date_of_birth,
+            "conditions": conditions,
+            "medications": medications,
+            "allergies": allergies,
+            "emergency_contact": emergency_contact,
+            "emergency_phone": emergency_phone,
+            "relationship": relationship
+        },
+        "content": {
+            "include_medical": include_medical,
+            "include_medications": include_medical and include_medications,
+            "include_allergies": include_medical and include_allergies,
+            "include_emergency": include_emergency
+        },
+        "access_count": 0
+    }
+    
+    # Save the QR data (in a real app, you'd save this to a database)
+    qr_file = save_qr_data(qr_id, qr_data)
+    
+    # Generate the QR code URL
+    qr_url = generate_qr_code_url(qr_data)
+    
+    # In a real app, you would generate an actual QR code image here
+    # For now, we'll use a placeholder
+    qr_code_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={qr_url}"
+    
+    # Generate an access code for private QR codes
+    access_code = None
+    if privacy == "private":
+        access_code = str(uuid.uuid4())[:8].upper()
+    
+    # Format the expiry date for display
+    display_expiry = None
+    if expiry_date:
+        display_expiry = expiry_date.strftime("%B %d, %Y at %H:%M")
+    
+    return templates.TemplateResponse(
+        "qr_tool_generate.html",
+        {
+            "request": request,
+            "qr_code_url": qr_code_url,
+            "qr_url": qr_url,
+            "privacy": privacy,
+            "access_code": access_code,
+            "expiry_date": display_expiry,
+            "created_date": datetime.now().strftime("%B %d, %Y at %H:%M")
+        }
+    )
+
+@app.get("/qr-tools")
+async def qr_tools(request: Request):
+    """
+    Serve the QR tools page.
+    """
+    return templates.TemplateResponse("qr_tools.html", {"request": request})
+
+@app.get("/api/health")
+async def health_check():
+    """
+    Health check endpoint.
+    Returns:
+        dict: Simple status message.
+    """
+    return {"status": "ok", "message": "AXA ADAPT API is running"}
 
 @app.get("/qr/{qr_id}", response_class=HTMLResponse)
-def view_health_summary(qr_id: str, request: Request):
+async def view_health_summary(qr_id: str, request: Request):
     """
     Unified QR scan endpoint for both basic (static) and full (tokenized) QR codes.
     - For basic: qr_id is static_id, loads qr_basic_{static_id}.json
     - For full: qr_id is token, loads qr_token_{token}.json and checks expiry
     """
-    # Try full (token) QR first
-    token_path = f"outputs/qr_token_{qr_id}.json"
-    static_path = f"outputs/qr_basic_{qr_id}.json"
-    token_data = None
-    qr_type = None
-    if os.path.exists(token_path):
-        with open(token_path) as f:
-            token_data = json.load(f)
-        qr_type = "full"
-        # Check expiry
-        expires = token_data.get("expires")
-        if expires and datetime.fromisoformat(expires.replace("Z","")) < datetime.utcnow():
-            return HTMLResponse("<h2>This QR code has expired.</h2>", status_code=410)
-        if token_data.get("revoked", False):
-            return HTMLResponse("<h2>This QR code has been revoked.</h2>", status_code=403)
-    elif os.path.exists(static_path):
-        with open(static_path) as f:
-            token_data = json.load(f)
-        qr_type = "basic"
-    else:
-        return HTMLResponse("<h2>QR code not found or expired.</h2>", status_code=404)
-    user_id = token_data.get("user_id")
-    consent = token_data.get("consent", {})
-    # Load user profile
-    profile_path = f"axa_app_mvp/profiles/health_profile_{user_id.split('_')[-1]}.json"
-    if not os.path.exists(profile_path):
-        profile_path = f"axa_app_mvp/profiles/health_profile_maria.json"  # fallback for demo
-    with open(profile_path) as f:
-        profile = json.load(f)
-    # Load risk report if available
-    risk_report_path = f"axa_app_mvp/outputs/risk_report_{user_id}.json"
-    risk_score = None
-    hazards = None
-    recommendation = None
-    if os.path.exists(risk_report_path):
-        with open(risk_report_path) as rf:
-            report = json.load(rf)
-            risk_score = report.get("score")
-            hazards = report.get("hazards")
-            recommendation = report.get("recommendation")
-    else:
-        risk_score = 72  # fallback
+    try:
+        # Try full (token) QR first
+        token_path = OUTPUT_DIR / f"qr_token_{qr_id}.json"
+        static_path = OUTPUT_DIR / f"qr_basic_{qr_id}.json"
+        token_data = None
+        qr_type = None
+        
+        if token_path.exists():
+            try:
+                token_data = validate_token(qr_id, output_dir=OUTPUT_DIR)
+                qr_type = "full"
+            except TokenExpiredError:
+                return HTMLResponse("<h2>This QR code has expired.</h2>", status_code=410)
+            except TokenValidationError as e:
+                logger.warning(f"Invalid token {qr_id}: {e}")
+                # Continue to check for static QR
+        
+        if token_data is None and static_path.exists():
+            try:
+                with open(static_path) as f:
+                    token_data = json.load(f)
+                qr_type = "basic"
+            except json.JSONDecodeError:
+                logger.error(f"Invalid static QR data: {static_path}")
+        
+        if not token_data:
+            return HTMLResponse(
+                "<h2>QR code not found or invalid.</h2>",
+                status_code=404
+            )
+        
+        # Get user profile
+        user_id = token_data.get("user_id")
+        if not user_id:
+            logger.error("No user_id in token data")
+            return HTMLResponse("<h2>Invalid QR code data.</h2>", status_code=400)
+        
+        profile = load_user_profile(user_id.split('_')[-1])
+        consent = token_data.get("consent", {})
+        
+        # Load risk report if available
+        risk_report_path = OUTPUT_DIR / f"risk_report_{user_id}.json"
+        risk_score = None
+        hazards = None
+        recommendation = None
+        
+        if risk_report_path.exists():
+            try:
+                with open(risk_report_path) as rf:
+                    report = json.load(rf)
+                    risk_score = report.get("score")
+                    hazards = report.get("hazards")
+                    recommendation = report.get("recommendation")
+            except (json.JSONDecodeError, IOError) as e:
+                logger.error(f"Error loading risk report: {e}")
+                risk_score = 50  # Default score if there's an error
+        else:
+            risk_score = 50  # Default score if no report exists
+            
+        # Prepare the response data
+        response_data = {
+            "user_id": user_id,
+            "profile": profile,
+            "consent": consent,
+            "risk_score": risk_score,
+            "hazards": hazards or [],
+            "recommendation": recommendation or "No specific recommendations available."
+        }
+        
+        # For now, return a simple HTML response
+        # In a real application, you would use a proper templating engine
+        html_content = f"""
+        <html>
+            <head><title>Health Summary</title></head>
+            <body>
+                <h1>Health Summary for {profile.get('name', 'User')}</h1>
+                <h2>Risk Score: {risk_score}/100</h2>
+                <h3>Recommendations:</h3>
+                <p>{recommendation or 'No specific recommendations available.'}</p>
+                <h3>Detected Hazards:</h3>
+                <ul>
+                    {"".join(f'<li>{hazard}</li>' for hazard in (hazards or []))}
+                </ul>
+            </body>
+        </html>
+        """
+        return HTMLResponse(content=html_content, status_code=200)
+        
+    except Exception as e:
+        logger.error(f"Error in view_health_summary: {e}")
+        return HTMLResponse(
+            content="<h2>An error occurred while processing your request.</h2>",
+            status_code=500
+        )
         hazards = [
             {"object": "cord", "location": "hallway", "reason": "Mobility and cognition increase risk"},
             {"object": "rug", "location": "bedroom", "reason": "Mobility increases risk"}
@@ -160,32 +569,84 @@ async def revoke_qr(request: Request):
         logf.write(json.dumps(log_entry) + "\n")
     return {"status": "revoked", "token": token}
 
-app = FastAPI()
-
-# Allow all origins for now (CORS)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-model = YOLO("yolov8n.pt")  # Replace with your model file if needed
-
-@app.get("/")
-def root():
+@app.post("/api/generate-qr", response_model=Dict)
+async def generate_qr_code_endpoint(request: QRGenerateRequest):
     """
-    Health check endpoint.
+    Generate a secure QR code for health data access.
+    
+    Args:
+        request: QR generation parameters including user_id and access type
+        
     Returns:
-        dict: Simple status message.
+        JSON with QR code URL and metadata
     """
-    return {"message": "AXA ADAPT backend is running."}
+    try:
+        # Generate secure URL with token
+        qr_url = generate_secure_url(
+            user_id=request.user_id,
+            expiry_hours=request.expiry_hours,
+            output_dir=OUTPUT_DIR,
+            access_type=request.access_type,
+            metadata=request.metadata or {}
+        )
+        
+        # Generate QR code image
+        qr_filename = f"qr_{request.user_id}_{int(datetime.utcnow().timestamp())}.png"
+        qr_path = OUTPUT_DIR / qr_filename
+        
+        create_qr_code(
+            data=qr_url,
+            filename=qr_path,
+            box_size=10,
+            border=4,
+            fill_color="black",
+            back_color="white"
+        )
+        
+        return {
+            "status": "success",
+            "qr_url": qr_url,
+            "image_url": f"/static/{qr_filename}",
+            "expires_at": (datetime.utcnow() + timedelta(hours=request.expiry_hours)).isoformat()
+        }
+        
+    except QRCodeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("Error generating QR code")
+        raise HTTPException(status_code=500, detail="Failed to generate QR code")
 
-from fastapi import Request
-from fastapi.responses import HTMLResponse
-import json
-from datetime import datetime, timedelta
+@app.on_event("startup")
+async def startup_event():
+    """Initialize application services on startup."""
+    # Ensure output directory exists
+    OUTPUT_DIR.mkdir(exist_ok=True, parents=True)
+    
+    # Clean up any expired tokens
+    expired, stale = cleanup_expired_tokens(output_dir=OUTPUT_DIR)
+    logger.info(f"Cleaned up {expired} expired and {stale} stale tokens on startup")
+    
+    # Preload model (optional)
+    # get_model()
+
+# Scheduled task for cleaning up expired tokens (runs daily)
+from apscheduler.schedulers.background import BackgroundScheduler
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(
+    cleanup_expired_tokens,
+    'interval',
+    hours=24,
+    args=[OUTPUT_DIR],
+    id='cleanup_tokens',
+    name='Clean up expired tokens',
+    replace_existing=True
+)
+scheduler.start()
+
+# Handle application shutdown
+import atexit
+atexit.register(lambda: scheduler.shutdown())
 import os
 
 # Predefined data blocks for consent
@@ -480,62 +941,235 @@ async def generate_qr(user_id: str, request: Request):
         "consent_blocks": consent_blocks
     }
 
-from fastapi import Request
+from fastapi import Request, Form, Depends, HTTPException
+from fastapi.responses import RedirectResponse
+from pydantic import BaseModel, Field, validator
+from typing import List, Optional, Dict, Any
+from datetime import datetime, timedelta
+import uuid
+import json
+from pathlib import Path
+
+# QR Tool data models
+class QRProfileForm(BaseModel):
+    first_name: str
+    last_name: str
+    date_of_birth: str
+    conditions: List[str] = []
+    medications: str = ""
+    allergies: str = ""
+    emergency_contact: str
+    emergency_phone: str
+    relationship: str
+
+class QRContentSelection(BaseModel):
+    include_medical: bool = True
+    include_medications: bool = True
+    include_allergies: bool = True
+    include_emergency: bool = True
+
+class QRPrivacySettings(BaseModel):
+    privacy: str  # 'public' or 'private'
+    expiry: str = '24'  # hours or 'custom'
+    custom_expiry_date: Optional[str] = None
+
+class QRGenerateData(BaseModel):
+    profile: Dict[str, Any]
+    content: Dict[str, bool]
+    privacy: Dict[str, Any]
+    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+
+# QR Tool utility functions
+def save_qr_data(user_id: str, qr_data: Dict[str, Any], output_dir: str = "axa_app_mvp/outputs") -> str:
+    """Save QR data to a JSON file and return the filename."""
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+    filename = f"qr_data_{user_id}_{int(datetime.utcnow().timestamp())}.json"
+    filepath = Path(output_dir) / filename
+    
+    with open(filepath, 'w') as f:
+        json.dump(qr_data, f, indent=2)
+    
+    return str(filepath)
+
+def generate_qr_code_url(qr_data: Dict[str, Any], base_url: str = "https://axa-adapt.com") -> str:
+    """Generate a secure URL for the QR code."""
+    qr_id = str(uuid.uuid4())
+    # In a real implementation, you would store this in a database
+    # For now, we'll just return a URL with a query parameter
+    return f"{base_url}/qr/view/{qr_id}"
+
+from fastapi import Request, Form, Depends
 from axa_app_mvp.logic.hazard_scoring import (
     load_risk_matrix, load_thresholds, load_detection_mapping,
     map_detected_objects_to_hazards, score_hazards
 )
 
-@app.post("/process-multi-room")
-async def detect_hazards(
+# ADAPT Tool Routes
+@app.get("/adapt-tool/start", response_class=HTMLResponse)
+async def adapt_tool_start(request: Request):
+    """
+    Serve the ADAPT Tool start page.
+    """
+    return templates.TemplateResponse("adapt_tool_start.html", {"request": request, "current_date": datetime.now().strftime("%B %d, %Y")})
+
+@app.get("/adapt-tool/upload", response_class=HTMLResponse)
+async def adapt_tool_upload(request: Request):
+    """
+    Serve the ADAPT Tool room photo upload page.
+    """
+    return templates.TemplateResponse("adapt_tool_upload.html", {"request": request, "current_date": datetime.now().strftime("%B %d, %Y")})
+
+@app.get("/adapt-tool/profile", response_class=HTMLResponse)
+async def adapt_tool_profile(request: Request):
+    """
+    Serve the ADAPT Tool profile questions page.
+    """
+    return templates.TemplateResponse("adapt_tool_profile.html", {"request": request, "current_date": datetime.now().strftime("%B %d, %Y")})
+
+@app.get("/adapt-tool/results", response_class=HTMLResponse)
+async def adapt_tool_results(request: Request):
+    """
+    Serve the ADAPT Tool results page with fall risk assessment.
+    """
+    return templates.TemplateResponse("adapt_tool_results.html", {
+        "request": request, 
+        "current_date": datetime.now().strftime("%B %d, %Y"),
+        "current_year": datetime.now().year
+    })
+
+@app.post("/api/assess-hazards", response_model=Dict)
+async def assess_hazards(
     request: Request,
-    sittingRoom: UploadFile = File(...),
-    bathroom: UploadFile = File(...),
-    hallway: UploadFile = File(...),
-    steps: UploadFile = File(...),
-    bedroom: UploadFile = File(...)
+    sitting_room: UploadFile = File(None),
+    bathroom: UploadFile = File(None),
+    hallway: UploadFile = File(None),
+    steps: UploadFile = File(None),
+    bedroom: UploadFile = File(None),
+    profile_json: str = Form(...)
 ):
     """
-    Accepts 5 labeled room images and user profile, returns full risk report.
+    Accepts room images and user profile, returns fall hazard risk assessment.
+    
+    Args:
+        sitting_room: Image of the sitting room
+        bathroom: Image of the bathroom
+        hallway: Image of the hallway
+        steps: Image of the stairs/steps
+        bedroom: Image of the bedroom
+        profile_json: JSON string containing user profile information
+        
+    Returns:
+        JSON with risk assessment results
     """
-    # Parse JSON body for user profile
-    form = await request.form()
-    profile_json = form.get("profile")
-    if not profile_json:
-        return {"error": "Missing profile in form-data"}
-    import json
-    profile = json.loads(profile_json)
-
-    room_files = {
-        "sitting room": sittingRoom,
-        "bathroom": bathroom,
-        "hallway": hallway,
-        "steps": steps,
-        "bedroom": bedroom,
-    }
-
-    detected = []
-    for room, file in room_files.items():
-        contents = await file.read()
-        img_np = cv2.imdecode(np.frombuffer(contents, np.uint8), cv2.IMREAD_COLOR)
-        results = model(img_np)
-        for r in results:
-            for box in r.boxes:
-                cls_id = int(box.cls[0])
-                name = model.names[cls_id]
-                detected.append({
-                    "object": name,
-                    "location": room
-                })
-
-    # Load logic data
-    matrix = load_risk_matrix("axa_app_mvp/logic/risk_matrix_v1.csv")
-    thresholds = load_thresholds("axa_app_mvp/logic/risk_score_thresholds.csv")
-    mapping = load_detection_mapping("axa_app_mvp/logic/detection_to_hazard.csv")
-
-    # Map detected objects to hazards
-    hazards = map_detected_objects_to_hazards(detected, mapping)
-
-    # Score hazards
-    report = score_hazards(hazards, profile, matrix, thresholds)
+    try:
+        # Parse and validate profile
+        try:
+            profile = json.loads(profile_json)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Invalid profile JSON")
+        
+        # Process uploaded images
+        room_files = {
+            "sitting_room": sitting_room,
+            "bathroom": bathroom,
+            "hallway": hallway,
+            "steps": steps,
+            "bedroom": bedroom,
+        }
+        
+        # Filter out None values (not provided files)
+        room_files = {k: v for k, v in room_files.items() if v is not None}
+        
+        if not room_files:
+            raise HTTPException(status_code=400, detail="No images provided")
+        
+        # Load YOLO model
+        model = get_model()
+        
+        # Process each image
+        detected_objects = []
+        for room_name, file in room_files.items():
+            try:
+                contents = await file.read()
+                img_np = cv2.imdecode(np.frombuffer(contents, np.uint8), cv2.IMREAD_COLOR)
+                if img_np is None:
+                    logger.warning(f"Failed to decode image for {room_name}")
+                    continue
+                
+                # Run object detection
+                results = model(img_np)
+                
+                # Process detection results
+                for r in results:
+                    for box in r.boxes:
+                        cls_id = int(box.cls[0])
+                        name = model.names[cls_id]
+                        confidence = float(box.conf[0])
+                        
+                        # Get bounding box coordinates
+                        x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                        
+                        detected_objects.append({
+                            "object": name,
+                            "location": room_name.replace('_', ' '),
+                            "confidence": confidence,
+                            "bbox": {
+                                "x1": x1,
+                                "y1": y1,
+                                "x2": x2,
+                                "y2": y2
+                            }
+                        })
+                        
+                logger.info(f"Processed {room_name}: {len(detected_objects)} objects detected")
+                
+            except Exception as e:
+                logger.error(f"Error processing {room_name}: {e}")
+                continue
+        
+        if not detected_objects:
+            return {
+                "status": "success",
+                "message": "No hazards detected",
+                "score": 0,
+                "risk_level": "Low",
+                "hazards": []
+            }
+        
+        # Load risk assessment data
+        try:
+            matrix_path = BASE_DIR / "axa_app_mvp" / "logic" / "risk_matrix_v1.csv"
+            thresholds_path = BASE_DIR / "axa_app_mvp" / "logic" / "risk_score_thresholds.csv"
+            mapping_path = BASE_DIR / "axa_app_mvp" / "logic" / "detection_to_hazard.csv"
+            
+            matrix = load_risk_matrix(matrix_path)
+            thresholds = load_thresholds(thresholds_path)
+            mapping = load_detection_mapping(mapping_path)
+            
+            # Map detected objects to hazards and score them
+            hazards = map_detected_objects_to_hazards(detected_objects, mapping)
+            report = score_hazards(hazards, profile, matrix, thresholds)
+            
+            # Add timestamp and metadata
+            report["timestamp"] = datetime.utcnow().isoformat()
+            report["detected_objects"] = detected_objects
+            report["status"] = "success"
+            
+            return report
+            
+        except Exception as e:
+            logger.error(f"Error in risk assessment: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error in risk assessment: {str(e)}"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Unexpected error in hazard assessment")
+        raise HTTPException(
+            status_code=500,
+            detail=f"An unexpected error occurred: {str(e)}"
+        )
     return report

@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}UI Components Demo | AXA ADAPT{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <header class="mb-5 text-center">
+    <h1 class="display-4 mb-3">UI Components Demo</h1>
+    <p class="lead text-muted">Interactive elements and micro-interactions in the AXA ADAPT design system</p>
+  </header>
+
+  <!-- Buttons Section -->
+  <section class="mb-5">
+    <h2 class="h4 mb-4 border-bottom pb-2">Buttons</h2>
+    <div class="row g-3">
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h3 class="h5 mb-3">Primary Buttons</h3>
+            <button class="btn btn-primary me-2 mb-2">Primary</button>
+            <button class="btn btn-primary btn-loading me-2 mb-2">Loading</button>
+            <button class="btn btn-primary" disabled>Disabled</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h3 class="h5 mb-3">Secondary Buttons</h3>
+            <button class="btn btn-secondary me-2 mb-2">Secondary</button>
+            <button class="btn btn-outline-primary me-2 mb-2">Outline</button>
+            <button class="btn btn-link">Link Button</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h3 class="h5 mb-3">Button Sizes</h3>
+            <button class="btn btn-primary btn-sm me-2 mb-2">Small</button>
+            <button class="btn btn-primary me-2 mb-2">Default</button>
+            <button class="btn btn-primary btn-lg">Large</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Form Elements -->
+  <section class="mb-5">
+    <h2 class="h4 mb-4 border-bottom pb-2">Form Elements</h2>
+    <div class="row">
+      <div class="col-12 col-lg-6">
+        <div class="card mb-4">
+          <div class="card-body">
+            <h3 class="h5 mb-3">Input Fields</h3>
+            <div class="mb-3">
+              <label for="exampleInput" class="form-label">Text Input</label>
+              <input type="text" class="form-control" id="exampleInput" placeholder="Type something...">
+            </div>
+            <div class="mb-3">
+              <label for="exampleSelect" class="form-label">Select Dropdown</label>
+              <select class="form-select" id="exampleSelect">
+                <option selected>Choose an option</option>
+                <option value="1">Option 1</option>
+                <option value="2">Option 2</option>
+                <option value="3">Option 3</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="exampleTextarea" class="form-label">Textarea</label>
+              <textarea class="form-control" id="exampleTextarea" rows="3" placeholder="Enter your message..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="card mb-4">
+          <div class="card-body">
+            <h3 class="h5 mb-3">Checkboxes & Radios</h3>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" value="" id="defaultCheck1">
+              <label class="form-check-label" for="defaultCheck1">
+                Default checkbox
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" value="" id="defaultCheck2" checked>
+              <label class="form-check-label" for="defaultCheck2">
+                Checked checkbox
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" value="" id="defaultCheck3" disabled>
+              <label class="form-check-label" for="defaultCheck3">
+                Disabled checkbox
+              </label>
+            </div>
+            <hr class="my-3">
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios1" value="option1" checked>
+              <label class="form-check-label" for="exampleRadios1">
+                Default radio
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios2" value="option2">
+              <label class="form-check-label" for="exampleRadios2">
+                Second radio
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="exampleRadios" id="exampleRadios3" value="option3" disabled>
+              <label class="form-check-label" for="exampleRadios3">
+                Disabled radio
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cards Section -->
+  <section class="mb-5">
+    <h2 class="h4 mb-4 border-bottom pb-2">Cards</h2>
+    <div class="row g-4">
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100">
+          <div class="card-header bg-primary text-white">
+            <h3 class="h5 mb-0">Card with Header</h3>
+          </div>
+          <div class="card-body">
+            <p class="card-text">This is a basic card with a header. Hover over it to see the elevation effect.</p>
+            <button class="btn btn-primary">Action</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h3 class="h5 card-title">Card with Image</h3>
+            <div class="ratio ratio-16x9 mb-3">
+              <div class="bg-light d-flex align-items-center justify-content-center">
+                <span class="text-muted">Image Placeholder</span>
+              </div>
+            </div>
+            <p class="card-text">This card has an image and some content. Try clicking anywhere on the card.</p>
+            <a href="#" class="btn btn-outline-primary">Learn More</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 border-primary">
+          <div class="card-body text-center">
+            <div class="mb-3">
+              <svg width="3em" height="3em" viewBox="0 0 16 16" class="text-primary" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+              </svg>
+            </div>
+            <h3 class="h5 card-title">Feature Card</h3>
+            <p class="card-text">This card has a centered icon and content. Hover to see the elevation effect.</p>
+            <div class="d-flex justify-content-center gap-2">
+              <button class="btn btn-sm btn-outline-primary">Action 1</button>
+              <button class="btn btn-sm btn-outline-secondary">Action 2</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Alerts Section -->
+  <section class="mb-5">
+    <h2 class="h4 mb-4 border-bottom pb-2">Alerts</h2>
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <div class="alert alert-primary">
+          <div class="alert-content">
+            <span class="alert-title">Primary Alert</span>
+            <div class="alert-text">This is a primary alert with <a href="#" class="alert-link">an example link</a>.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="alert alert-success">
+          <div class="alert-content">
+            <span class="alert-title">Success Alert</span>
+            <div class="alert-text">This is a success alert with <a href="#" class="alert-link">an example link</a>.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="alert alert-warning">
+          <div class="alert-content">
+            <span class="alert-title">Warning Alert</span>
+            <div class="alert-text">This is a warning alert with <a href="#" class="alert-link">an example link</a>.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="alert alert-danger">
+          <div class="alert-content">
+            <span class="alert-title">Danger Alert</span>
+            <div class="alert-text">This is a danger alert with <a href="#" class="alert-link">an example link</a>.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tooltips Section -->
+  <section class="mb-5">
+    <h2 class="h4 mb-4 border-bottom pb-2">Tooltips</h2>
+    <div class="d-flex flex-wrap gap-3 mb-4">
+      <div class="tooltip" data-placement="top" aria-label="This is a top tooltip">
+        <button class="btn btn-outline-secondary">Top Tooltip</button>
+      </div>
+      <div class="tooltip" data-placement="right" aria-label="This is a right tooltip">
+        <button class="btn btn-outline-secondary">Right Tooltip</button>
+      </div>
+      <div class="tooltip" data-placement="bottom" aria-label="This is a bottom tooltip">
+        <button class="btn btn-outline-secondary">Bottom Tooltip</button>
+      </div>
+      <div class="tooltip" data-placement="left" aria-label="This is a left tooltip">
+        <button class="btn btn-outline-secondary">Left Tooltip</button>
+      </div>
+    </div>
+    
+    <div class="d-flex flex-wrap gap-3">
+      <div class="tooltip tooltip-primary" data-placement="top" aria-label="Primary tooltip">
+        <button class="btn btn-primary">Primary</button>
+      </div>
+      <div class="tooltip tooltip-success" data-placement="top" aria-label="Success tooltip">
+        <button class="btn btn-success">Success</button>
+      </div>
+      <div class="tooltip tooltip-warning" data-placement="top" aria-label="Warning tooltip">
+        <button class="btn btn-warning">Warning</button>
+      </div>
+      <div class="tooltip tooltip-danger" data-placement="top" aria-label="Danger tooltip">
+        <button class="btn btn-danger">Danger</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal Example -->
+  <section class="mb-5">
+    <h2 class="h4 mb-4 border-bottom pb-2">Modal Dialog</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+      Launch Demo Modal
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Modal Title</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>This is a demo of the modal component. Click outside or press ESC to close.</p>
+            <div class="mb-3">
+              <label for="modalInput" class="form-label">Example input</label>
+              <input type="text" class="form-control" id="modalInput" placeholder="Type something...">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Loading States -->
+  <section class="mb-5">
+    <h2 class="h4 mb-4 border-bottom pb-2">Loading States</h2>
+    <div class="row g-4">
+      <div class="col-12 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h3 class="h5 mb-3">Button Loading</h3>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-primary btn-loading">Loading...</button>
+              <button class="btn btn-outline-primary btn-loading">Loading...</button>
+              <button class="btn btn-primary" disabled>
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Loading...
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h3 class="h5 mb-3">Skeleton Loading</h3>
+            <div class="d-flex gap-3">
+              <div class="skeleton" style="width: 64px; height: 64px; border-radius: 50%;"></div>
+              <div style="flex: 1;">
+                <div class="skeleton mb-2" style="height: 16px; width: 70%;"></div>
+                <div class="skeleton" style="height: 12px; width: 90%;"></div>
+                <div class="skeleton mt-2" style="height: 12px; width: 50%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Tooltip initialization
+  const tooltipTriggers = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  tooltipTriggers.forEach(trigger => {
+    new bootstrap.Tooltip(trigger);
+  });
+  
+  // Button loading state demo
+  const buttons = document.querySelectorAll('.btn-loading');
+  buttons.forEach(button => {
+    if (!button.disabled) {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        this.classList.add('loading');
+        
+        // Simulate loading
+        setTimeout(() => {
+          this.classList.remove('loading');
+        }, 2000);
+      });
+    }
+  });
+  
+  // Card click effect
+  const clickableCards = document.querySelectorAll('.card[role="button"], .card[href]');
+  clickableCards.forEach(card => {
+    card.style.cursor = 'pointer';
+    
+    card.addEventListener('click', function(e) {
+      // Don't trigger if clicking on a button or link inside the card
+      if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || e.target.closest('a, button')) {
+        return;
+      }
+      
+      // Add active class for visual feedback
+      this.classList.add('active');
+      setTimeout(() => this.classList.remove('active'), 150);
+      
+      // If card has href, navigate to it
+      if (this.hasAttribute('href')) {
+        window.location.href = this.getAttribute('href');
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

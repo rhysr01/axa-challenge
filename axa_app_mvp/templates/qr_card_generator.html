@@ -29,6 +29,13 @@
         <p class="reminder" id="reminderMsg" style="display:none;"> Screenshot this image for your phone lock screen — it increases visibility during emergencies.</p>
     </form>
 </div>
+<!-- Offline QR Codes Section -->
+<div id="offlineQRCodes" style="margin-top: 30px; display: none;">
+    <div class="axa-section-title">Offline QR Codes</div>
+    <div id="offlineQRList" style="margin-top: 15px;">
+        <!-- Offline QR codes will be listed here -->
+    </div>
+</div>
 <button class="help-btn" aria-label="Show help/FAQ" onclick="toggleHelpSidebar()">?</button>
 <div class="help-sidebar" id="helpSidebar" role="complementary" aria-label="Help sidebar">
     <h3 style="color:#e60028; margin-top:0;">Need Help?</h3>
@@ -42,6 +49,98 @@
     <p style="color:#5f6a72; font-size:1em;">For more help, contact AXA support.</p>
 </div>
 <script>
+// Load offline QR codes when the page loads
+document.addEventListener('DOMContentLoaded', loadOfflineQRCodes);
+
+// Load offline QR codes from IndexedDB
+async function loadOfflineQRCodes() {
+    if (!window.offlineManager) return;
+    
+    try {
+        const qrDataList = await window.offlineManager.getAllQRData();
+        const offlineList = document.getElementById('offlineQRList');
+        const offlineSection = document.getElementById('offlineQRCodes');
+        
+        if (!offlineList || !offlineSection) return;
+        
+        if (qrDataList.length === 0) {
+            offlineSection.style.display = 'none';
+            return;
+        }
+        
+        offlineSection.style.display = 'block';
+        offlineList.innerHTML = '';
+        
+        qrDataList.forEach(qrItem => {
+            const qrCard = document.createElement('div');
+            qrCard.className = 'axa-card';
+            qrCard.style.marginBottom = '15px';
+            qrCard.style.padding = '15px';
+            
+            const title = document.createElement('div');
+            title.className = 'axa-section-title';
+            title.textContent = qrItem.data.name || 'Unnamed QR Code';
+            
+            const img = document.createElement('img');
+            img.src = qrItem.data.image_url || '';
+            img.alt = 'QR Code';
+            img.style.maxWidth = '200px';
+            img.style.height = 'auto';
+            img.style.display = 'block';
+            img.style.margin = '10px auto';
+            
+            const downloadBtn = document.createElement('button');
+            downloadBtn.textContent = 'Download';
+            downloadBtn.className = 'axa-btn';
+            downloadBtn.style.marginRight = '10px';
+            downloadBtn.onclick = () => downloadImage(qrItem.data.image_url, `axa-qr-${qrItem.id}.png`);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.className = 'axa-btn';
+            deleteBtn.style.backgroundColor = '#f8f9fa';
+            deleteBtn.style.color = '#e60028';
+            deleteBtn.style.border = '1px solid #e60028';
+            deleteBtn.onclick = () => deleteQRCode(qrItem.id);
+            
+            const btnContainer = document.createElement('div');
+            btnContainer.style.display = 'flex';
+            btnContainer.style.justifyContent = 'center';
+            btnContainer.style.gap = '10px';
+            btnContainer.appendChild(downloadBtn);
+            btnContainer.appendChild(deleteBtn);
+            
+            qrCard.appendChild(title);
+            qrCard.appendChild(img);
+            qrCard.appendChild(btnContainer);
+            
+            offlineList.appendChild(qrCard);
+        });
+    } catch (error) {
+        console.error('Error loading offline QR codes:', error);
+    }
+}
+
+// Delete a QR code from offline storage
+async function deleteQRCode(id) {
+    if (!window.offlineManager || !window.confirm('Are you sure you want to delete this QR code? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const db = await window.offlineManager.openDatabase();
+        const tx = db.transaction(['qrData'], 'readwrite');
+        const store = tx.objectStore('qrData');
+        await store.delete(id);
+        
+        // Reload the offline QR codes list
+        await loadOfflineQRCodes();
+    } catch (error) {
+        console.error('Error deleting QR code:', error);
+        alert('Failed to delete QR code. Please try again.');
+    }
+}
+
 (function () {
     // Declare all variables in module scope only once
     const fridgeCheck = document.getElementById('fridgeCardCheck');
@@ -73,7 +172,30 @@
     };
 
     function showError(msg) {
-        alert(msg);
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'axa-error';
+        errorDiv.style.backgroundColor = '#ffebee';
+        errorDiv.style.color = '#c62828';
+        errorDiv.style.padding = '12px';
+        errorDiv.style.borderRadius = '4px';
+        errorDiv.style.margin = '10px 0';
+        errorDiv.style.borderLeft = '4px solid #c62828';
+        errorDiv.textContent = msg;
+        
+        // Insert after the first card div or at the top of the form
+        const firstCard = document.querySelector('.axa-card');
+        if (firstCard) {
+            firstCard.insertBefore(errorDiv, firstCard.firstChild);
+        } else {
+            document.body.insertBefore(errorDiv, document.body.firstChild);
+        }
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.parentNode.removeChild(errorDiv);
+            }
+        }, 5000);
     }
 
     window.generateCards = async function () {
@@ -86,6 +208,17 @@
         reminderMsg.style.display = 'none';
         spinner.style.display = 'block';
         generateBtn.disabled = true;
+        
+        // Check if we're offline
+        const isOffline = !navigator.onLine;
+        
+        // If offline and no image is selected, show error
+        if (isOffline && !fridgeFile.files[0] && !familyFile.files[0]) {
+            showError('Please select an image to generate a QR code when offline.');
+            spinner.style.display = 'none';
+            generateBtn.disabled = false;
+            return;
+        }
         let hasCard = false;
         try {
             if (fridgeCheck.checked && fridgeFile.files.length > 0) {
@@ -93,15 +226,84 @@
                 const formData = new FormData();
                 formData.append('card_type', 'fridge');
                 formData.append('photo', fridgeFile.files[0]);
-                const resp = await fetch('/generate-qr-card', { method: 'POST', body: formData });
-                if (resp.ok) {
-                    const data = await resp.json();
-                    fridgePreview.src = data.image_url;
-                    fridgePreview.style.display = '';
-                    fridgePreviewWrap.style.display = '';
-                    fridgeDownloadBtn.style.display = '';
-                    fridgeDownloadBtn.onclick = () => downloadImage(data.image_url, 'fridge_card.png');
-                } else { showError('Error generating fridge card.'); }
+                let resp;
+                try {
+                    // Try to make the request
+                    resp = await fetch('/generate-qr-card', { method: 'POST', body: formData });
+                    
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        fridgePreview.src = data.image_url;
+                        
+                        // Save to offline storage
+                        if (window.offlineManager) {
+                            await window.offlineManager.saveQRData({
+                                name: 'Fridge QR Card',
+                                type: 'fridge',
+                                image_url: data.image_url,
+                                timestamp: new Date().toISOString()
+                            });
+                        }
+                        fridgePreview.style.display = '';
+                        fridgePreviewWrap.style.display = '';
+                        fridgeDownloadBtn.style.display = '';
+                        fridgeDownloadBtn.onclick = () => downloadImage(data.image_url, 'fridge_card.png');
+                    } else { showError('Error generating fridge card.'); }
+                } catch (e) {
+                    console.error('Error generating card:', error);
+                    
+                    // If offline, try to generate a basic QR code using a library
+                    if (!navigator.onLine && (fridgeFile.files[0] || familyFile.files[0])) {
+                        try {
+                            const qrData = await generateOfflineQR();
+                            if (qrData) {
+                                if (fridgeCheck.checked) {
+                                    fridgePreview.src = qrData.image_url;
+                                    fridgePreview.style.display = '';
+                                    fridgePreviewWrap.style.display = 'block';
+                                    fridgeDownloadBtn.style.display = 'inline-block';
+                                    reminderMsg.style.display = 'block';
+                                    hasCard = true;
+                                    
+                                    // Save to offline storage
+                                    if (window.offlineManager) {
+                                        await window.offlineManager.saveQRData({
+                                            name: 'Offline Fridge QR Card',
+                                            type: 'fridge',
+                                            image_url: qrData.image_url,
+                                            timestamp: new Date().toISOString(),
+                                            isOffline: true
+                                        });
+                                    }
+                                }
+                                if (familyCheck.checked) {
+                                    familyPreview.src = qrData.image_url;
+                                    familyPreview.style.display = '';
+                                    familyPreviewWrap.style.display = 'block';
+                                    familyDownloadBtn.style.display = 'inline-block';
+                                    reminderMsg.style.display = 'block';
+                                    hasCard = true;
+                                    
+                                    // Save to offline storage
+                                    if (window.offlineManager) {
+                                        await window.offlineManager.saveQRData({
+                                            name: 'Offline Family QR Card',
+                                            type: 'family',
+                                            image_url: qrData.image_url,
+                                            timestamp: new Date().toISOString(),
+                                            isOffline: true
+                                        });
+                                    }
+                                }
+                            }
+                        } catch (offlineError) {
+                            console.error('Error generating offline QR:', offlineError);
+                            showError('You are offline and need to be online to generate a QR code for the first time.');
+                        }
+                    } else {
+                        showError('Error generating card. ' + (navigator.onLine ? 'Please try again.' : 'You are currently offline.'));
+                    }
+                }
             }
             if (familyCheck.checked && familyFile.files.length > 0) {
                 hasCard = true;
@@ -119,27 +321,143 @@
                 } else { showError('Error generating family card.'); }
             }
             if (hasCard) {
-                reminderMsg.style.display = '';
+                reminderMsg.style.display = 'block';
+                // Reload the offline QR codes list to show the new code
+                if (window.offlineManager) {
+                    loadOfflineQRCodes();
+                }
             }
         } catch (e) {
-            showError('Network or server error.');
+            console.error('Error generating card:', error);
         }
         spinner.style.display = 'none';
         generateBtn.disabled = false;
     };
 
     function downloadImage(url, filename) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        // If this is a data URL or absolute URL, use it as is
+        if (url.startsWith('data:') || url.startsWith('http')) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename || 'axa-qr-code.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            // For local URLs, try to fetch and convert to data URL
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const blobUrl = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = filename || 'axa-qr-code.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(blobUrl);
+                })
+                .catch(error => {
+                    console.error('Error downloading image:', error);
+                    showError('Failed to download image. Please try again.');
+                });
+        }
     }
 
     window.onload = () => {
         fridgeFile.focus();
     };
+    
+        // Function to generate a basic QR code offline
+    async function generateOfflineQR() {
+    try {
+        // Get the profile data from session storage or form
+        let profileData = {};
+        
+        // Try to get from session storage first
+        if (window.sessionStorage) {
+            const savedProfile = window.sessionStorage.getItem('axa_profile');
+            if (savedProfile) {
+                try {
+                    profileData = JSON.parse(savedProfile);
+                } catch (e) {
+                    console.error('Error parsing profile data:', e);
+                }
+            }
+        }
+        
+        // If no profile data, use a default
+        if (Object.keys(profileData).length === 0) {
+            profileData = {
+                name: 'Offline User',
+                emergencyContact: 'Emergency: 112',
+                medicalInfo: 'Medical info not available offline',
+                notes: 'Generated offline - limited information available'
+            };
+        }
+        
+        // Create a simple QR code with the profile data
+        const qrData = {
+            name: profileData.name || 'Offline QR Code',
+            emergencyContact: profileData.emergencyContact || 'Emergency: 112',
+            medicalInfo: profileData.medicalInfo || 'Medical info not available',
+            notes: profileData.notes || 'Generated offline',
+            timestamp: new Date().toISOString(),
+            isOffline: true
+        };
+        
+        // Convert to JSON string
+        const qrText = JSON.stringify(qrData);
+        
+        // Generate QR code using a simple text representation (in a real app, use a QR code library)
+        // For now, we'll create a simple data URL with the text
+        const canvas = document.createElement('canvas');
+        canvas.width = 200;
+        canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+        
+        // Draw a simple pattern (in a real app, use a QR code library)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 200, 200);
+        ctx.fillStyle = '#000000';
+        ctx.font = '10px Arial';
+        ctx.fillText('AXA QR Code', 60, 20);
+        ctx.font = '8px Arial';
+        const lines = qrText.match(/.{1,30}/g) || [];
+        lines.forEach((line, i) => {
+            ctx.fillText(line, 10, 40 + (i * 10));
+        });
+        
+        // Convert canvas to data URL
+        const dataUrl = canvas.toDataURL('image/png');
+        
+        return {
+            image_url: dataUrl,
+            data: qrData
+        };
+    } catch (error) {
+        console.error('Error generating offline QR code:', error);
+        throw error;
+    }
+}
+
+    // Add a function to initialize the offline manager
+    function initOfflineManager() {
+        if (window.offlineManager) {
+            // Listen for online/offline events
+            window.addEventListener('online', () => {
+                // Try to process any queued requests when coming back online
+                if (window.offlineManager && window.offlineManager.processQueue) {
+                    window.offlineManager.processQueue();
+                }
+                // Reload the page to get fresh data
+                window.location.reload();
+            });
+        }
+    }
+
+    // Initialize when the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', initOfflineManager);
 })();
 </script>
 

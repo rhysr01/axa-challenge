@@ -1,11 +1,10 @@
-FROM python:3.9-slim
+FROM python:3.9-slim as builder
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,12 +12,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python packages with retries
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install --retries 5 --timeout 60 -r requirements.txt
+
+# Final stage
+FROM python:3.9-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PATH="/opt/venv/bin:$PATH"
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+
 # Set working directory
 WORKDIR /app
-
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
@@ -30,9 +47,10 @@ RUN mkdir -p /app/outputs
 ENV ENVIRONMENT=production \
     HOST=0.0.0.0 \
     PORT=10000 \
-    WORKERS=4 \
+    WORKERS=2 \
     TIMEOUT=120 \
-    RELOAD=false
+    RELOAD=false \
+    PYTHONPATH=/app
 
 # Expose the port the app runs on
 EXPOSE 10000

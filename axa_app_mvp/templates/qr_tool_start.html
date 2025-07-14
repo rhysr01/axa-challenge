@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}AXA ADAPT - Create Your Emergency QR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 51, 102, 0.1);
+        margin-bottom: 2rem;
+        border: 1px solid rgba(0, 102, 204, 0.1);
+    }
+    
+    .form-title {
+        color: var(--axa-dark-blue);
+        font-weight: 700;
+        margin-bottom: 1.25rem;
+        font-size: 1.75rem;
+        text-align: center;
+    }
+    
+    .form-subtitle {
+        color: var(--axa-gray);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        text-align: center;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--axa-dark-blue);
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+    }
+    
+    .form-control, .form-select {
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--axa-light-gray);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--axa-blue);
+        box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+    }
+    
+    .btn-next {
+        background: var(--axa-blue);
+        color: white;
+        font-weight: 600;
+        padding: 0.875rem 2rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        border: none;
+        width: 100%;
+        max-width: 320px;
+        margin: 2.5rem auto 1rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        display: block;
+    }
+    .btn-next:hover {
+        background: #c50021;
+        color: white;
+    }
+    .back-link {
+        color: #5f6a72;
+        text-align: center;
+        display: block;
+        margin-top: 1rem;
+    }
+    .back-link i {
+        margin-right: 0.5rem;
+    }
+    .step-indicator {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    .step {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #e0e3e7;
+        color: #5f6a72;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin: 0 10px;
+        position: relative;
+    }
+    .step.active {
+        background: #e60028;
+        color: white;
+    }
+    .step.completed {
+        background: #2ecc71;
+        color: white;
+    }
+    .step-line {
+        flex: 1;
+        height: 4px;
+        background: #e0e3e7;
+        margin: 0 -10px;
+        position: relative;
+        top: 13px;
+    }
+    .step-text {
+        position: absolute;
+        top: 35px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        color: #5f6a72;
+    }
+    .step.active .step-text {
+        color: #e60028;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Progress Indicator -->
+    <div class="step-indicator mb-5">
+        <div class="step active">
+            1
+            <span class="step-text">Your Info</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+            2
+            <span class="step-text">QR Content</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+            3
+            <span class="step-text">Privacy</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+            4
+            <span class="step-text">Download</span>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="form-section">
+                <h1 class="form-title">Who is this QR for?</h1>
+                <p class="form-subtitle">
+                    This information helps emergency responders provide the best care. We'll only use this 
+                    for alerting loved ones if something happens.
+                </p>
+
+                <form id="qrProfileForm" action="{{ url_for('qr_tool_content') }}" method="POST">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="firstName" class="form-label">First Name*</label>
+                            <input type="text" class="form-control" id="firstName" name="first_name" required 
+                                   placeholder="Enter first name">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="lastName" class="form-label">Last Name*</label>
+                            <input type="text" class="form-control" id="lastName" name="last_name" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="dateOfBirth" class="form-label">Date of Birth*</label>
+                        <input type="date" class="form-control" id="dateOfBirth" name="date_of_birth" required>
+                    </div>
+
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Medical Conditions (select all that apply)</label>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div class="form-check p-3 border rounded mb-2">
+                                    <input class="form-check-input" type="checkbox" value="Heart Disease" id="heartDisease" name="conditions">
+                                    <label class="form-check-label ms-2" for="heartDisease">
+                                        <i class="bi bi-heart-pulse me-1"></i> Heart Disease
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check p-3 border rounded mb-2">
+                                    <input class="form-check-input" type="checkbox" value="Diabetes" id="diabetes" name="conditions">
+                                    <label class="form-check-label ms-2" for="diabetes">
+                                        <i class="bi bi-droplet me-1"></i> Diabetes
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check p-3 border rounded mb-2">
+                                    <input class="form-check-input" type="checkbox" value="High Blood Pressure" id="hypertension" name="conditions">
+                                    <label class="form-check-label ms-2" for="hypertension">
+                                        <i class="bi bi-heart-pulse-fill me-1"></i> High Blood Pressure
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check p-3 border rounded mb-2">
+                                    <input class="form-check-input" type="checkbox" value="Asthma/COPD" id="asthma" name="conditions">
+                                    <label class="form-check-label ms-2" for="asthma">
+                                        <i class="bi bi-lungs me-1"></i> Asthma/COPD
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check p-3 border rounded mb-2">
+                                    <input class="form-check-input" type="checkbox" value="Dementia" id="dementia" name="conditions">
+                                    <label class="form-check-label ms-2" for="dementia">
+                                        <i class="bi bi-activity me-1"></i> Dementia
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check p-3 border rounded mb-2">
+                                    <input class="form-check-input" type="checkbox" value="Arthritis" id="arthritis" name="conditions">
+                                    <label class="form-check-label ms-2" for="arthritis">
+                                        <i class="bi bi-bandaid me-1"></i> Arthritis
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="input-group p-2 border rounded">
+                                    <div class="form-check d-flex align-items-center">
+                                        <input class="form-check-input" type="checkbox" id="otherCondition" name="conditions">
+                                        <label class="form-check-label ms-2" for="otherCondition">
+                                            Other:
+                                        </label>
+                                    </div>
+                                    <input type="text" class="form-control border-0" id="otherConditionText" placeholder="Specify condition">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="medications" class="form-label">Current Medications (optional)</label>
+                        <textarea class="form-control" id="medications" name="medications" rows="2" 
+                                  placeholder="e.g., Aspirin 81mg daily, Metformin 500mg twice daily"></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="allergies" class="form-label">Allergies (optional)</label>
+                        <input type="text" class="form-control" id="allergies" name="allergies" 
+                               placeholder="e.g., Penicillin, Peanuts">
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="emergencyContact" class="form-label">Emergency Contact Name*</label>
+                        <input type="text" class="form-control" id="emergencyContact" name="emergency_contact" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="emergencyPhone" class="form-label">Emergency Contact Phone*</label>
+                        <input type="tel" class="form-control" id="emergencyPhone" name="emergency_phone" required
+                               placeholder="+1 (___) ___-____">
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="relationship" class="form-label">Relationship to You*</label>
+                        <select class="form-select" id="relationship" name="relationship" required>
+                            <option value="" disabled selected>Select relationship</option>
+                            <option value="spouse">Spouse/Partner</option>
+                            <option value="child">Child</option>
+                            <option value="parent">Parent</option>
+                            <option value="sibling">Sibling</option>
+                            <option value="friend">Friend</option>
+                            <option value="caregiver">Caregiver</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-next">
+                            Continue to QR Content <i class="bi bi-arrow-right"></i>
+                        </button>
+                        <div class="mt-3">
+                            <a href="{{ url_for('home') }}" class="text-decoration-none text-muted">
+                                <i class="bi bi-arrow-left me-1"></i> Back to Home
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize phone number input formatting
+        const phoneInput = document.getElementById('emergencyPhone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function(e) {
+                let x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,4})/);
+                e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + ')' + (x[3] ? ' ' + x[3] : '') + (x[4] ? '-' + x[4] : '');
+            });
+        }
+
+        // Handle condition checkboxes
+        const conditionCheckboxes = document.querySelectorAll('input[name="conditions[]"]');
+        const noneCheckbox = document.getElementById('conditionNone');
+        
+        conditionCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this === noneCheckbox && this.checked) {
+                    // If "None" is checked, uncheck all other conditions
+                    conditionCheckboxes.forEach(cb => {
+                        if (cb !== noneCheckbox) cb.checked = false;
+                    });
+                } else if (this !== noneCheckbox && this.checked) {
+                    // If any other condition is checked, uncheck "None"
+                    noneCheckbox.checked = false;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,547 @@
+{% extends "base.html" %}
+
+{% block title %}AXA ADAPT - Upload Room Photos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    .room-card {
+        border: 2px dashed #cbd5e0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .room-card.has-image {
+        border-color: #0066CC;
+        background-color: #f0f7ff;
+    }
+    
+    .room-card.error {
+        border-color: #e53e3e;
+        background-color: #fff5f5;
+    }
+    
+    .room-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .room-icon {
+        width: 40px;
+        height: 40px;
+        background-color: #e6f0ff;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: #0066CC;
+        font-size: 1.25rem;
+    }
+    
+    .room-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0;
+    }
+    
+    .room-description {
+        color: #4a5568;
+        margin-bottom: 1rem;
+        font-size: 0.9375rem;
+    }
+    
+    .upload-area {
+        text-align: center;
+        padding: 2rem;
+        border: 2px dashed #cbd5e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 1rem;
+    }
+    
+    .upload-area:hover {
+        border-color: #0066CC;
+        background-color: #f8fafc;
+    }
+    
+    .upload-area i {
+        font-size: 2.5rem;
+        color: #0066CC;
+        margin-bottom: 1rem;
+    }
+    
+    .upload-area p {
+        margin: 0.5rem 0 0;
+        color: #4a5568;
+    }
+    
+    .preview-image {
+        width: 100%;
+        max-width: 300px;
+        height: auto;
+        border-radius: 8px;
+        margin: 0 auto 1rem;
+        display: block;
+    }
+    
+    .btn-remove {
+        background: none;
+        border: none;
+        color: #e53e3e;
+        cursor: pointer;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        margin-top: 0.5rem;
+    }
+    
+    .btn-remove i {
+        margin-right: 0.25rem;
+    }
+    
+    .btn-continue {
+        background-color: #0066CC;
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        display: block;
+        width: 100%;
+        max-width: 300px;
+        margin: 2rem auto 0;
+    }
+    
+    .btn-continue:hover {
+        background-color: #0052a3;
+    }
+    
+    .btn-continue:disabled {
+        background-color: #cbd5e0;
+        cursor: not-allowed;
+    }
+    
+    .progress-container {
+        margin-top: 1rem;
+        display: none;
+    }
+    
+    .progress-bar {
+        height: 8px;
+        background-color: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+    
+    .progress {
+        height: 100%;
+        background-color: #0066CC;
+        width: 0;
+        transition: width 0.3s ease;
+    }
+    
+    .progress-text {
+        font-size: 0.875rem;
+        color: #4a5568;
+        text-align: center;
+    }
+    
+    @media (min-width: 768px) {
+        .upload-section {
+            padding: 2.5rem;
+        }
+        
+        .room-card {
+            padding: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="flex items-center mb-6">
+        <a href="{{ url_for('home') }}" class="text-axa-blue hover:text-axa-dark-blue mr-4">
+            <i class="bi bi-arrow-left text-xl"></i>
+        </a>
+        <h1 class="text-2xl font-bold text-axa-blue">Home Safety Assessment</h1>
+    </div>
+    
+    <div class="flex mb-6">
+        <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div class="bg-axa-blue h-2.5 rounded-full" style="width: 25%"></div>
+        </div>
+    </div>
+    
+    <div class="upload-section">
+        <h2 class="text-xl font-semibold text-axa-blue mb-6">Upload Photos of Each Room</h2>
+        <p class="text-gray-700 mb-6">Please take clear, well-lit photos of the following areas in your home. This will help us identify potential fall hazards.</p>
+        
+        <form id="uploadForm" action="{{ url_for('assess_hazards') }}" method="post" enctype="multipart/form-data">
+            <!-- Living Room -->
+            <div class="room-card" id="livingRoomCard">
+                <div class="room-header">
+                    <div class="room-icon">
+                        <i class="bi bi-tv"></i>
+                    </div>
+                    <h3 class="room-title">Living Room</h3>
+                </div>
+                <p class="room-description">Take a photo showing the main seating area and walkways.</p>
+                
+                <div class="upload-area" id="livingRoomUpload">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <p><strong>Click to upload</strong> or drag and drop</p>
+                    <p class="text-sm">JPG or PNG (max 5MB)</p>
+                    <input type="file" name="sitting_room" id="livingRoomInput" accept="image/*" class="hidden" data-room="living">
+                </div>
+                
+                <div class="preview-container hidden" id="livingRoomPreview">
+                    <img src="" alt="Living Room Preview" class="preview-image" id="livingRoomImage">
+                    <button type="button" class="btn-remove" data-room="living">
+                        <i class="bi bi-trash"></i> Remove photo
+                    </button>
+                </div>
+                
+                <div class="progress-container" id="livingRoomProgress">
+                    <div class="progress-bar">
+                        <div class="progress" id="livingRoomProgressBar"></div>
+                    </div>
+                    <p class="progress-text" id="livingRoomProgressText">Uploading...</p>
+                </div>
+            </div>
+            
+            <!-- Bedroom -->
+            <div class="room-card" id="bedroomCard">
+                <div class="room-header">
+                    <div class="room-icon">
+                        <i class="bi bi-lamp"></i>
+                    </div>
+                    <h3 class="room-title">Bedroom</h3>
+                </div>
+                <p class="room-description">Take a photo showing the bed and surrounding area.</p>
+                
+                <div class="upload-area" id="bedroomUpload">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <p><strong>Click to upload</strong> or drag and drop</p>
+                    <p class="text-sm">JPG or PNG (max 5MB)</p>
+                    <input type="file" name="bedroom" id="bedroomInput" accept="image/*" class="hidden" data-room="bedroom">
+                </div>
+                
+                <div class="preview-container hidden" id="bedroomPreview">
+                    <img src="" alt="Bedroom Preview" class="preview-image" id="bedroomImage">
+                    <button type="button" class="btn-remove" data-room="bedroom">
+                        <i class="bi bi-trash"></i> Remove photo
+                    </button>
+                </div>
+                
+                <div class="progress-container" id="bedroomProgress">
+                    <div class="progress-bar">
+                        <div class="progress" id="bedroomProgressBar"></div>
+                    </div>
+                    <p class="progress-text" id="bedroomProgressText">Uploading...</p>
+                </div>
+            </div>
+            
+            <!-- Bathroom -->
+            <div class="room-card" id="bathroomCard">
+                <div class="room-header">
+                    <div class="room-icon">
+                        <i class="bi bi-bucket"></i>
+                    </div>
+                    <h3 class="room-title">Bathroom</h3>
+                </div>
+                <p class="room-description">Take a photo showing the shower, toilet, and sink area.</p>
+                
+                <div class="upload-area" id="bathroomUpload">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <p><strong>Click to upload</strong> or drag and drop</p>
+                    <p class="text-sm">JPG or PNG (max 5MB)</p>
+                    <input type="file" name="bathroom" id="bathroomInput" accept="image/*" class="hidden" data-room="bathroom">
+                </div>
+                
+                <div class="preview-container hidden" id="bathroomPreview">
+                    <img src="" alt="Bathroom Preview" class="preview-image" id="bathroomImage">
+                    <button type="button" class="btn-remove" data-room="bathroom">
+                        <i class="bi bi-trash"></i> Remove photo
+                    </button>
+                </div>
+                
+                <div class="progress-container" id="bathroomProgress">
+                    <div class="progress-bar">
+                        <div class="progress" id="bathroomProgressBar"></div>
+                    </div>
+                    <p class="progress-text" id="bathroomProgressText">Uploading...</p>
+                </div>
+            </div>
+            
+            <!-- Hallway -->
+            <div class="room-card" id="hallwayCard">
+                <div class="room-header">
+                    <div class="room-icon">
+                        <i class="bi bi-arrow-left-right"></i>
+                    </div>
+                    <h3 class="room-title">Hallway</h3>
+                </div>
+                <p class="room-description">Take a photo of the main hallway showing the floor and any obstacles.</p>
+                
+                <div class="upload-area" id="hallwayUpload">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <p><strong>Click to upload</strong> or drag and drop</p>
+                    <p class="text-sm">JPG or PNG (max 5MB)</p>
+                    <input type="file" name="hallway" id="hallwayInput" accept="image/*" class="hidden" data-room="hallway">
+                </div>
+                
+                <div class="preview-container hidden" id="hallwayPreview">
+                    <img src="" alt="Hallway Preview" class="preview-image" id="hallwayImage">
+                    <button type="button" class="btn-remove" data-room="hallway">
+                        <i class="bi bi-trash"></i> Remove photo
+                    </button>
+                </div>
+                
+                <div class="progress-container" id="hallwayProgress">
+                    <div class="progress-bar">
+                        <div class="progress" id="hallwayProgressBar"></div>
+                    </div>
+                    <p class="progress-text" id="hallwayProgressText">Uploading...</p>
+                </div>
+            </div>
+            
+            <!-- Stairs (Optional) -->
+            <div class="room-card" id="stairsCard">
+                <div class="room-header">
+                    <div class="room-icon">
+                        <i class="bi bi-arrow-up-square"></i>
+                    </div>
+                    <h3 class="room-title">Stairs (Optional)</h3>
+                </div>
+                <p class="room-description">If your home has stairs, please take a photo of them.</p>
+                
+                <div class="upload-area" id="stairsUpload">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <p><strong>Click to upload</strong> or drag and drop</p>
+                    <p class="text-sm">JPG or PNG (max 5MB)</p>
+                    <input type="file" name="steps" id="stairsInput" accept="image/*" class="hidden" data-room="stairs">
+                </div>
+                
+                <div class="preview-container hidden" id="stairsPreview">
+                    <img src="" alt="Stairs Preview" class="preview-image" id="stairsImage">
+                    <button type="button" class="btn-remove" data-room="stairs">
+                        <i class="bi bi-trash"></i> Remove photo
+                    </button>
+                </div>
+                
+                <div class="progress-container" id="stairsProgress">
+                    <div class="progress-bar">
+                        <div class="progress" id="stairsProgressBar"></div>
+                    </div>
+                    <p class="progress-text" id="stairsProgressText">Uploading...</p>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-continue" id="continueBtn" disabled>
+                Continue to Profile Questions
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Room types we're handling
+    const roomTypes = ['living', 'bedroom', 'bathroom', 'hallway', 'stairs'];
+    
+    // Initialize file upload functionality for each room
+    roomTypes.forEach(room => {
+        const uploadArea = document.getElementById(`${room}Upload`);
+        const fileInput = document.getElementById(`${room}Input`);
+        const previewContainer = document.getElementById(`${room}Preview`);
+        const previewImage = document.getElementById(`${room}Image`);
+        const progressContainer = document.getElementById(`${room}Progress`);
+        const progressBar = document.getElementById(`${room}ProgressBar`);
+        const progressText = document.getElementById(`${room}ProgressText`);
+        const roomCard = document.getElementById(`${room}Card`);
+        
+        // Click on upload area triggers file input
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        // Handle file selection
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                
+                // Validate file type
+                if (!file.type.match('image.*')) {
+                    showError(room, 'Please upload an image file (JPG, PNG)');
+                    return;
+                }
+                
+                // Validate file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    showError(room, 'File size must be less than 5MB');
+                    return;
+                }
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                    uploadArea.style.display = 'none';
+                    roomCard.classList.add('has-image');
+                    updateContinueButton();
+                };
+                reader.readAsDataURL(file);
+                
+                // Simulate upload progress (in a real app, this would be an actual upload)
+                simulateUpload(room);
+            }
+        });
+        
+        // Handle drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            uploadArea.classList.add('border-axa-blue', 'bg-blue-50');
+        }
+        
+        function unhighlight() {
+            uploadArea.classList.remove('border-axa-blue', 'bg-blue-50');
+        }
+        
+        // Handle drop
+        uploadArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length) {
+                fileInput.files = files;
+                // Trigger change event
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }
+        }
+        
+        // Remove image
+        const removeBtn = document.querySelector(`[data-room="${room}"]`);
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+                fileInput.value = '';
+                previewContainer.classList.add('hidden');
+                uploadArea.style.display = 'block';
+                roomCard.classList.remove('has-image');
+                roomCard.classList.remove('error');
+                updateContinueButton();
+            });
+        }
+    });
+    
+    // Simulate upload progress (in a real app, this would be an actual upload)
+    function simulateUpload(room) {
+        const progressBar = document.getElementById(`${room}ProgressBar`);
+        const progressContainer = document.getElementById(`${room}Progress`);
+        const progressText = document.getElementById(`${room}ProgressText`);
+        
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+        progressText.textContent = 'Uploading...';
+        
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 10;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+                progressText.textContent = 'Upload complete!';
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                }, 1000);
+            }
+            progressBar.style.width = `${progress}%`;
+        }, 100);
+    }
+    
+    // Show error message
+    function showError(room, message) {
+        const roomCard = document.getElementById(`${room}Card`);
+        const progressText = document.getElementById(`${room}ProgressText`);
+        
+        roomCard.classList.add('error');
+        progressText.textContent = message;
+        progressText.style.color = '#e53e3e';
+        
+        // Clear file input
+        document.getElementById(`${room}Input`).value = '';
+    }
+    
+    // Update continue button state
+    function updateContinueButton() {
+        const requiredRooms = ['living', 'bedroom', 'bathroom', 'hallway'];
+        const hasAllRequired = requiredRooms.every(room => {
+            const input = document.getElementById(`${room}Input`);
+            return input.files && input.files.length > 0;
+        });
+        
+        document.getElementById('continueBtn').disabled = !hasAllRequired;
+    }
+    
+    // Form submission
+    const form = document.getElementById('uploadForm');
+    form.addEventListener('submit', function(e) {
+        // In a real app, this would submit the form to the server
+        // For now, we'll just log the files and continue
+        e.preventDefault();
+        console.log('Form submitted with files:', {
+            sitting_room: document.getElementById('livingRoomInput').files[0],
+            bedroom: document.getElementById('bedroomInput').files[0],
+            bathroom: document.getElementById('bathroomInput').files[0],
+            hallway: document.getElementById('hallwayInput').files[0],
+            steps: document.getElementById('stairsInput').files[0] || null
+        });
+        
+        // In a real app, you would submit the form here
+        // form.submit();
+        
+        // For demo purposes, we'll just show an alert
+        alert('Form would be submitted to the server in a real app.');
+        
+        // Uncomment this in the real implementation:
+        // window.location.href = '{{ url_for("profile_questions") }}';
+    });
+});
+</script>
+{% endblock %}

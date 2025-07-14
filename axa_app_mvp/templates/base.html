@@ -2,109 +2,529 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}AXA App{% endblock %}</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="stylesheet" href="/static/axa_theme.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0066CC">
+    <meta name="description" content="AXA ADAPT - Helping families and older adults stay safe at home">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{% block title %}AXA ADAPT{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <!-- Page-specific CSS -->
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Load any page-specific JavaScript at the end -->
+    {% block page_js %}{% endblock %}
+    
+    <!-- Favicons and Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" href="/static/icons/icon-192x192.png">
     <style>
+        :root {
+            --axa-blue: #0066CC;
+            --axa-dark-blue: #003366;
+            --axa-light-blue: #0099FF;
+            --axa-bg: #F5F9FF;
+            --axa-card-bg: #FFFFFF;
+            --axa-text: #1A1A1A;
+            --axa-text-light: #5F6A72;
+            --axa-border: #E0E3E7;
+            --axa-success: #00A651;
+            --axa-warning: #FFB81C;
+            --axa-error: #E60028;
+            --axa-gray: #5F6A72;
+            --axa-light-gray: #E0E3E7;
+            --axa-shadow-sm: 0 2px 8px rgba(0, 51, 102, 0.08);
+            --axa-shadow-md: 0 4px 12px rgba(0, 51, 102, 0.12);
+            --axa-transition: all 0.2s ease;
+        }
+        
         body {
-            background: #fff;
-            font-family: Arial, Helvetica, sans-serif;
-            color: #222;
+            background: var(--axa-bg);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            color: var(--axa-text);
             margin: 0;
-            font-size: 18pt;
-        }
-        .axa-header {
-            background: #e60028;
-            color: #fff;
-            padding: 24px 0 12px 0;
-            text-align: center;
-            border-radius: 0 0 20px 20px;
-            font-size: 1.3em;
-        }
-        .axa-header img {
-            height: 48px;
-            margin-bottom: 4px;
-        }
-        .axa-footer {
-            background: #5f6a72;
-            color: #fff;
-            text-align: center;
-            padding: 18px 0 8px 0;
-            font-size: 1em;
-            border-radius: 20px 20px 0 0;
-            margin-top: 32px;
-        }
-        .axa-sidebar {
-            width: 240px;
-            background: #f7f7fa;
-            border-right: 2px solid #e60028;
-            position: fixed;
-            left: 0; top: 0; bottom: 0;
-            padding: 30px 18px 18px 18px;
-            font-size: 1.1em;
-            z-index: 10;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            gap: 24px;
         }
-        .axa-main {
-            margin-left: 260px;
-            padding: 32px 18px 18px 18px;
-            min-height: 80vh;
+        
+        /* Header Styles */
+        .axa-header {
+            background: var(--axa-blue);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1030;
         }
-        .axa-nav-link {
-            color: #e60028;
+        
+        .axa-header .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+        }
+        
+        .axa-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             text-decoration: none;
-            font-weight: bold;
+            color: white;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .axa-logo img {
+            height: 36px;
+            filter: brightness(0) invert(1);
+            transition: var(--axa-transition);
+        }
+        
+        .axa-logo:hover img {
+            opacity: 0.9;
+        }
+        
+        /* Navigation */
+        .axa-nav {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        
+        .axa-nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            transition: var(--axa-transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .axa-nav-link:hover, .axa-nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.15);
+            text-decoration: none;
+        }
+        
+        .axa-nav-link i {
             font-size: 1.1em;
-            padding: 10px 0;
-            display: block;
         }
-        .axa-nav-link.active, .axa-nav-link:hover {
-            color: #fff;
-            background: #e60028;
-            border-radius: 8px;
-            padding-left: 8px;
+        
+        /* Main Content */
+        .axa-main {
+            flex: 1;
+            padding: 2rem 1.5rem;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
         }
-        @media (max-width: 900px) {
-            .axa-sidebar {
-                position: static;
-                width: 100%;
-                flex-direction: row;
-                gap: 8px;
-                padding: 12px 4vw;
-                border-radius: 0;
-                border-right: none;
-                border-bottom: 2px solid #e60028;
+        
+        /* Footer */
+        .axa-footer {
+            background: var(--axa-dark-blue);
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            padding: 2rem 1.5rem;
+            margin-top: 3rem;
+            font-size: 0.95em;
+        }
+        
+        .axa-footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .axa-footer-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: var(--axa-transition);
+        }
+        
+        .axa-footer-link:hover {
+            color: white;
+            text-decoration: underline;
+        }
+        
+        .axa-copyright {
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+        
+        /* Mobile Navigation */
+        .axa-mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            cursor: pointer;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 992px) {
+            .axa-nav {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--axa-blue);
+                padding: 1rem;
+                flex-direction: column;
+                gap: 0.5rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             }
+            
+            .axa-nav.active {
+                display: flex;
+            }
+            
+            .axa-mobile-menu-btn {
+                display: block;
+            }
+            
             .axa-main {
-                margin-left: 0;
-                padding: 12px 2vw 18px 2vw;
+                padding: 1.5rem 1rem;
             }
         }
-        @media (max-width: 600px) {
-            body { font-size: 16pt; }
-            .axa-header, .axa-footer { font-size: 1em; }
+        
+        /* Utility Classes */
+        .axa-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+        
+        .axa-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--axa-transition);
+            border: none;
+            cursor: pointer;
+        }
+        
+        .axa-btn-primary {
+            background-color: var(--axa-blue);
+            color: white;
+        }
+        
+        .axa-btn-primary:hover {
+            background-color: var(--axa-dark-blue);
+            color: white;
+        }
+        
+        .axa-card {
+            background: var(--axa-card-bg);
+            border-radius: 12px;
+            box-shadow: var(--axa-shadow-sm);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: var(--axa-transition);
+        }
+        
+        .axa-card:hover {
+            box-shadow: var(--axa-shadow-md);
+        }
+        
+        .axa-section {
+            margin-bottom: 3rem;
+        }
+        
+        .axa-section-title {
+            color: var(--axa-dark-blue);
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        @media (max-width: 576px) {
+            body { 
+                font-size: 16pt; 
+            }
+            
+            .axa-header, 
+            .axa-footer { 
+                font-size: 1em; 
+            }
+            
+            .axa-main {
+                padding: 1rem;
+            }
+            
+            .axa-card {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="axa-header">
-        <img src="/axa_app_mvp/static/axa_logo.png" alt="AXA logo" aria-label="AXA logo">
-        <div>AXA Elderly Care App</div>
-    </div>
-    <nav class="axa-sidebar" aria-label="Main navigation">
-        <a href="/" class="axa-nav-link">Dashboard</a>
-        <a href="/generate-qr" class="axa-nav-link">Generate QR</a>
-        <a href="/qr-card-generator" class="axa-nav-link">QR Card Generator</a>
-        <a href="/qr-logs" class="axa-nav-link">QR Scan Logs</a>
-        <a href="/help" class="axa-nav-link">Help & FAQ</a>
-    </nav>
-    <main class="axa-main" role="main">
-        {% block content %}{% endblock %}
+    <header class="axa-header">
+        <div class="container">
+            <div class="axa-header-container">
+                <a href="{{ url_for('index') }}" class="axa-logo">
+                    <img src="{{ url_for('static', filename='img/axa-logo.svg') }}" alt="AXA" width="40" height="40" class="axa-logo-img">
+                    <span class="axa-logo-text">ADAPT</span>
+                </a>
+                
+                <button class="axa-mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation" aria-expanded="false">
+                    <span class="menu-icon"></span>
+                </button>
+                
+                <nav class="axa-nav" id="mainNav">
+                    <ul class="axa-nav-list">
+                        <li class="axa-nav-item">
+                            <a href="{{ url_for('index') }}" class="axa-nav-link {% if request.path == url_for('index') %}active{% endif %}">
+                                <i class="bi bi-house-door"></i> Home
+                            </a>
+                        </li>
+                        <li class="axa-nav-item">
+                            <a href="{{ url_for('qr_tool_start') }}" class="axa-nav-link {% if request.path.startswith('/qr-tool') %}active{% endif %}">
+                                <i class="bi bi-qr-code"></i> QR Tool
+                            </a>
+                        </li>
+                        <li class="axa-nav-item">
+                            <a href="{{ url_for('adapt_tool_start') }}" class="axa-nav-link {% if request.path.startswith('/adapt-tool') %}active{% endif %}">
+                                <i class="bi bi-shield-check"></i> ADAPT Tool
+                            </a>
+                        </li>
+                        <li class="axa-nav-item">
+                            <a href="#" class="axa-nav-link">
+                                <i class="bi bi-person-circle"></i> Profile
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+    <main class="axa-main">
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alerts">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}" role="alert">
+                                <div class="alert-content">
+                                    {% if category == 'success' %}
+                                        <i class="bi bi-check-circle"></i>
+                                    {% elif category == 'error' %}
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                    {% else %}
+                                        <i class="bi bi-info-circle"></i>
+                                    {% endif %}
+                                    <span>{{ message }}</span>
+                                </div>
+                                <button type="button" class="alert-close" aria-label="Close">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </div>
     </main>
-    <div class="axa-footer">
-        &copy; {{ year }} AXA | For elderly safety and care | <a href="/help" style="color:#fff; text-decoration:underline;">Help</a>
-    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="{{ url_for('static', filename='img/axa-logo-white.svg') }}" alt="AXA" class="footer-logo" width="140">
+                    <p class="footer-tagline">Helping families and older adults stay safe at home</p>
+                </div>
+                
+                <div class="footer-nav-section">
+                    <h3 class="footer-heading">Quick Links</h3>
+                    <ul class="footer-nav">
+                        <li><a href="{{ url_for('index') }}" class="footer-link">Home</a></li>
+                        <li><a href="{{ url_for('qr_tool_start') }}" class="footer-link">QR Tool</a></li>
+                        <li><a href="{{ url_for('adapt_tool_start') }}" class="footer-link">ADAPT Tool</a></li>
+                        <li><a href="#" class="footer-link">About Us</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-nav-section">
+                    <h3 class="footer-heading">Resources</h3>
+                    <ul class="footer-nav">
+                        <li><a href="#" class="footer-link">Safety Tips</a></li>
+                        <li><a href="#" class="footer-link">Caregiver Resources</a></li>
+                        <li><a href="#" class="footer-link">Emergency Contacts</a></li>
+                        <li><a href="#" class="footer-link">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-nav-section">
+                    <h3 class="footer-heading">Legal</h3>
+                    <ul class="footer-nav">
+                        <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                        <li><a href="#" class="footer-link">Terms of Service</a></li>
+                        <li><a href="#" class="footer-link">Cookie Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom JS -->
+    <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mainNav = document.getElementById('mainNav');
+            
+            if (mobileMenuBtn && mainNav) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    mainNav.classList.toggle('show');
+                    mobileMenuBtn.classList.toggle('active');
+                    mobileMenuBtn.setAttribute('aria-expanded', 
+                        mobileMenuBtn.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'
+                    );
+                    
+                    // Toggle body scroll when menu is open
+                    document.body.style.overflow = 
+                        mainNav.classList.contains('show') ? 'hidden' : '';
+                });
+                
+                // Close menu when clicking outside or on a nav link
+                document.addEventListener('click', function(event) {
+                    if (!mainNav.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+                        mainNav.classList.remove('show');
+                        mobileMenuBtn.classList.remove('active');
+                        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                        document.body.style.overflow = '';
+                    }
+                });
+                
+                // Close menu on resize if viewport becomes larger than mobile
+                function handleResize() {
+                    if (window.innerWidth >= 768) {
+                        mainNav.classList.remove('show');
+                        mobileMenuBtn.classList.remove('active');
+                        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                        document.body.style.overflow = '';
+                    }
+                }
+                
+                window.addEventListener('resize', handleResize);
+                
+                // Close menu when clicking a nav link on mobile
+                const navLinks = document.querySelectorAll('.nav-link');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth < 768) {
+                            mainNav.classList.remove('show');
+                            mobileMenuBtn.classList.remove('active');
+                            mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                            document.body.style.overflow = '';
+                        }
+                    });
+                });
+            }
+            
+            // Close alert messages
+            const alertCloseButtons = document.querySelectorAll('.alert-close');
+            alertCloseButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const alert = this.closest('.alert');
+                    alert.style.opacity = '0';
+                    setTimeout(() => {
+                        alert.style.display = 'none';
+                    }, 300);
+                });
+            });
+            
+            // Auto-hide alerts after 5 seconds
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    if (alert.style.display !== 'none') {
+                        alert.style.opacity = '0';
+                        setTimeout(() => {
+                            alert.style.display = 'none';
+                        }, 300);
+                    }
+                }, 5000);
+            });
+            
+            // Add focus styles for keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    document.body.classList.add('keyboard-focus');
+                }
+            });
+            
+            document.addEventListener('mousedown', function() {
+                document.body.classList.remove('keyboard-focus');
+            });
+        });
+        
+        // Set current year in footer
+        document.addEventListener('DOMContentLoaded', function() {
+            const yearElements = document.querySelectorAll('.current-year');
+            const currentYear = new Date().getFullYear();
+            yearElements.forEach(el => {
+                el.textContent = currentYear;
+            });
+        });
+    </script>
+    
+    <!-- Offline functionality -->
+    <script src="/static/offline-manager.js"></script>
+    <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/static/service-worker.js')
+                .then(registration => {
+                    console.log('ServiceWorker registration successful');
+                })
+                .catch(err => {
+                    console.error('ServiceWorker registration failed: ', err);
+                });
+        });
+    }
+    
+    // Check if the page is being shown from the cache
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            console.log('Page was restored from the bfcache');
+        }
+    });
+    </script>
 </body>
 </html>

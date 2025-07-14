@@ -1,0 +1,469 @@
+{% extends "base.html" %}
+
+{% block title %}AXA ADAPT - Set Privacy Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 2px 8px rgba(0, 51, 102, 0.1);
+        margin-bottom: 2rem;
+        border: 1px solid rgba(0, 102, 204, 0.1);
+    }
+    
+    .form-title {
+        color: var(--axa-dark-blue);
+        font-weight: 700;
+        margin-bottom: 1.25rem;
+        font-size: 1.75rem;
+        text-align: center;
+    }
+    
+    .form-subtitle {
+        color: var(--axa-gray);
+        font-size: 1.1rem;
+        margin-bottom: 2.5rem;
+        text-align: center;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .privacy-option {
+        border: 1px solid var(--axa-light-gray);
+        border-radius: 8px;
+        padding: 1.75rem;
+        margin-bottom: 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .privacy-option:hover {
+        border-color: var(--axa-blue);
+        box-shadow: 0 4px 12px rgba(0, 102, 204, 0.1);
+    }
+    
+    .privacy-option.selected {
+        border-color: var(--axa-blue);
+        background-color: rgba(0, 102, 204, 0.05);
+        box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+    }
+    
+    .privacy-option .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-top: 0.25rem;
+        margin-right: 1rem;
+        float: left;
+        border-color: var(--axa-light-gray);
+    }
+    
+    .privacy-option .form-check-input:checked {
+        background-color: var(--axa-blue);
+        border-color: var(--axa-blue);
+    }
+    
+    .privacy-option .form-check-label {
+        display: block;
+        overflow: hidden;
+    }
+    .privacy-option h5 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+    }
+    .privacy-option h5 i {
+        margin-right: 0.75rem;
+        font-size: 1.5rem;
+    }
+    .privacy-option p {
+        color: #5f6a72;
+        margin-bottom: 0.5rem;
+        padding-left: 2.25rem;
+    }
+    .privacy-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.4rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1.25rem;
+    }
+    .badge-public {
+        background-color: rgba(0, 166, 81, 0.1);
+        color: var(--axa-success);
+    }
+    .badge-private {
+        background-color: rgba(0, 102, 204, 0.1);
+        color: var(--axa-blue);
+    }
+    .privacy-icon {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        color: var(--axa-blue);
+        float: left;
+    }
+    .privacy-content {
+        overflow: hidden;
+    }
+    .privacy-title {
+        font-weight: 700;
+        color: var(--axa-dark-blue);
+        margin-bottom: 0.75rem;
+        font-size: 1.25rem;
+        display: flex;
+        align-items: center;
+    }
+    .privacy-description {
+        color: var(--axa-gray);
+        margin-bottom: 1.25rem;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    .expiry-options {
+        margin-top: 1rem;
+        padding-left: 2.25rem;
+        display: none;
+    }
+    .expiry-options.show {
+        display: block;
+    }
+    .expiry-option {
+        margin-bottom: 0.75rem;
+    }
+    .expiry-option input[type="radio"] {
+        margin-right: 0.5rem;
+    }
+    .expiry-option label {
+        cursor: pointer;
+    }
+    .custom-expiry {
+        display: flex;
+        align-items: center;
+        margin-top: 0.5rem;
+        margin-left: 1.5rem;
+    }
+    .custom-expiry input[type="date"] {
+        padding: 0.5rem;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        margin-right: 0.5rem;
+    }
+    .btn-next {
+        background: #e60028;
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        border: none;
+        width: 100%;
+        max-width: 300px;
+        margin: 2rem auto 1rem;
+        display: block;
+    }
+    .btn-next:hover {
+        background: #c50021;
+        color: white;
+    }
+    .back-link {
+        color: #5f6a72;
+        text-align: center;
+        display: block;
+        margin-top: 1rem;
+    }
+    .privacy-tip {
+        background: #f8f9fa;
+        border-left: 4px solid #e60028;
+        padding: 1rem;
+        margin: 1.5rem 0;
+        border-radius: 0 8px 8px 0;
+    }
+    .privacy-tip i {
+        color: #e60028;
+        margin-right: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Progress Indicator -->
+    <div class="step-indicator mb-5">
+        <div class="step completed">
+            <i class="bi bi-check"></i>
+            <span class="step-text">Your Info</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step completed">
+            <i class="bi bi-check"></i>
+            <span class="step-text">QR Content</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step active">
+            3
+            <span class="step-text">Privacy</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+            4
+            <span class="step-text">Download</span>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="form-section">
+                <h1 class="form-title">Who can access this QR code?</h1>
+                <p class="form-subtitle">
+                    Choose how you want to share your health information. Your privacy is important to us, 
+                    and you can update these settings anytime.
+                </p>
+
+                <form id="privacyForm" action="{{ url_for('qr_tool_generate') }}" method="POST">
+                    <!-- Hidden fields to carry over previous form data -->
+                    <input type="hidden" name="first_name" value="{{ form_data.first_name }}">
+                    <input type="hidden" name="last_name" value="{{ form_data.last_name }}">
+                    <input type="hidden" name="date_of_birth" value="{{ form_data.date_of_birth }}">
+                    <input type="hidden" name="conditions" value="{{ form_data.conditions }}">
+                    <input type="hidden" name="medications" value="{{ form_data.medications }}">
+                    <input type="hidden" name="allergies" value="{{ form_data.allergies }}">
+                    <input type="hidden" name="emergency_contact" value="{{ form_data.emergency_contact }}">
+                    <input type="hidden" name="emergency_phone" value="{{ form_data.emergency_phone }}">
+                    <input type="hidden" name="relationship" value="{{ form_data.relationship }}">
+                    <input type="hidden" name="include_medical" value="{{ form_data.include_medical }}">
+                    <input type="hidden" name="include_medications" value="{{ form_data.include_medications }}">
+                    <input type="hidden" name="include_allergies" value="{{ form_data.include_allergies }}">
+                    <input type="hidden" name="include_emergency" value="{{ form_data.include_emergency }}">
+
+                    <!-- Public Option -->
+                    <div class="privacy-option selected" id="publicOption" onclick="selectOption('public')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="privacy" id="public" value="public" checked>
+                            <label class="form-check-label">
+                                <span class="privacy-badge badge-public">
+                                    <i class="bi bi-globe me-2"></i> Public Access
+                                </span>
+                                <div class="privacy-content">
+                                    <div class="privacy-title">
+                                        <i class="bi bi-people-fill me-2"></i> Anyone with the QR code
+                                    </div>
+                                    <p class="privacy-description">
+                                        Your information will be accessible to anyone who scans this QR code. 
+                                        This is ideal for emergency situations where quick access to your 
+                                        health information could be critical.
+                                    </p>
+                                    <div class="alert alert-light mt-3 mb-0" style="background-color: rgba(0, 166, 81, 0.05); border-left: 3px solid var(--axa-success);">
+                                        <i class="bi bi-lightbulb me-2"></i> Best for: Emergency use, medical bracelets, or when you want first responders to have immediate access.
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Private Option -->
+                    <div class="privacy-option" id="privateOption" onclick="selectOption('private')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="privacy" id="private" value="private">
+                            <label class="form-check-label">
+                                <span class="privacy-badge badge-private">
+                                    <i class="bi bi-lock"></i> Private
+                                </span>
+                                <div class="privacy-content">
+                                    <div class="privacy-title">
+                                        <i class="bi bi-lock me-2"></i> Only authorized individuals
+                                    </div>
+                                    <p class="privacy-description">
+                                        Only people with the access code can view your health information.
+                                    </p>
+                                    <div class="expiry-options" id="expiryOptions">
+                                        <p class="mb-2"><strong>Set access expiry:</strong></p>
+                                        <div class="expiry-option">
+                                            <input type="radio" id="expiry24" name="expiry" value="24" checked>
+                                            <label for="expiry24">Expires in 24 hours</label>
+                                        </div>
+                                        <div class="expiry-option">
+                                            <input type="radio" id="expiry7" name="expiry" value="168">
+                                            <label for="expiry7">Expires in 7 days</label>
+                                        </div>
+                                        <div class="expiry-option">
+                                            <input type="radio" id="expiry30" name="expiry" value="720">
+                                            <label for="expiry30">Expires in 30 days</label>
+                                        </div>
+                                        <div class="expiry-option">
+                                            <input type="radio" id="expiryCustom" name="expiry" value="custom">
+                                            <label for="expiryCustom">Custom date:</label>
+                                            <div class="custom-expiry">
+                                                <input type="date" id="customExpiryDate" name="custom_expiry_date" 
+                                                       min="{{ today }}" disabled>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="privacy-tip">
+                        <i class="bi bi-shield-check"></i>
+                        <strong>Your privacy matters.</strong> We use bank-level encryption to protect your health information.
+                        You can revoke access or update your QR code at any time.
+                    </div>
+
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-5 pt-4 border-top">
+                        <a href="{{ url_for('qr_tool_content') }}" class="btn btn-outline-primary mb-3 mb-md-0">
+                            <i class="bi bi-arrow-left me-2"></i> Back to Content
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            Generate QR Code <i class="bi bi-qr-code-scan ms-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set minimum date for custom expiry to today
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set default values
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('customExpiryDate').min = today;
+        
+        // Set default custom date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('customExpiryDate').value = tomorrow.toISOString().split('T')[0];
+        
+        // Initialize privacy option selection
+        const publicOption = document.getElementById('publicOption');
+        const privateOption = document.getElementById('privateOption');
+        const expiryOptions = document.getElementById('expiryOptions');
+        
+        // Check if private was previously selected
+        const privateRadio = document.getElementById('private');
+        if (privateRadio.checked) {
+            selectOption('private');
+        }
+        
+        // Handle custom date radio button
+        const customExpiryRadio = document.getElementById('expiryCustom');
+        const customExpiryDate = document.getElementById('customExpiryDate');
+        
+        customExpiryRadio.addEventListener('change', function() {
+            customExpiryDate.disabled = !this.checked;
+        });
+        
+        // Handle date input changes
+        customExpiryDate.addEventListener('change', function() {
+            if (customExpiryRadio.checked) {
+                customExpiryRadio.value = 'custom_' + this.value;
+            }
+        });
+    });
+    
+    // Handle privacy option selection with animation
+    function selectOption(option) {
+        // Update radio button
+        document.getElementById(option).checked = true;
+        
+        // Get DOM elements
+        const publicOption = document.getElementById('publicOption');
+        const privateOption = document.getElementById('privateOption');
+        const passwordFields = document.getElementById('passwordFields');
+        
+        // Animate selection
+        if (option === 'public') {
+            // Add animation to the selected option
+            publicOption.animate([
+                { transform: 'scale(1)', boxShadow: '0 0 0 rgba(0, 102, 204, 0)' },
+                { transform: 'scale(1.01)', boxShadow: '0 4px 16px rgba(0, 102, 204, 0.2)' },
+                { transform: 'scale(1)', boxShadow: '0 2px 8px rgba(0, 102, 204, 0.1)' }
+            ], {
+                duration: 300,
+                easing: 'ease-out'
+            });
+            
+            // Update UI
+            publicOption.classList.add('selected');
+            privateOption.classList.remove('selected');
+            passwordFields.style.display = 'none';
+        } else {
+            // Add animation to the selected option
+            privateOption.animate([
+                { transform: 'scale(1)', boxShadow: '0 0 0 rgba(0, 102, 204, 0)' },
+                { transform: 'scale(1.01)', boxShadow: '0 4px 16px rgba(0, 102, 204, 0.2)' },
+                { transform: 'scale(1)', boxShadow: '0 2px 8px rgba(0, 102, 204, 0.1)' }
+            ], {
+                duration: 300,
+                easing: 'ease-out'
+            });
+            
+            // Update UI
+            publicOption.classList.remove('selected');
+            privateOption.classList.add('selected');
+            passwordFields.style.display = 'block';
+            
+            // Focus on password field when showing
+            setTimeout(() => {
+                document.getElementById('password')?.focus();
+            }, 100);
+        }
+    }
+    
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const input = this.previousElementSibling;
+            const icon = this.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+    });
+    
+    // Handle form submission with validation
+    document.getElementById('privacyForm').addEventListener('submit', function(e) {
+        const privacy = document.querySelector('input[name="privacy"]:checked').value;
+        
+        if (privacy === 'private') {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validate password
+            if (password.length < 6) {
+                e.preventDefault();
+                alert('Password must be at least 6 characters long');
+                document.getElementById('password').focus();
+                return false;
+            }
+            
+            // Validate password match
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match');
+                document.getElementById('confirmPassword').focus();
+                return false;
+            }
+        }
+        
+        return true;
+    });
+</script>
+{% endblock %}

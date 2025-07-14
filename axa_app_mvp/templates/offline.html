@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Offline - AXA App{% endblock %}
+{% block content %}
+<div class="axa-card">
+    <div class="axa-section-title">You're Offline</div>
+    <div style="text-align: center; padding: 20px 0;">
+        <div style="font-size: 5em;">📶</div>
+        <h2>No Internet Connection</h2>
+        <p>It seems you're currently offline. Some features may be limited.</p>
+        <div style="margin: 30px 0; text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+            <h3 style="margin-top: 0; color: #e60028;">What you can do:</h3>
+            <ul style="padding-left: 20px;">
+                <li>View previously accessed content</li>
+                <li>Generate QR codes (saved locally)</li>
+                <li>View your scan history</li>
+            </ul>
+            <p style="margin-bottom: 0;">Your changes will sync when you're back online.</p>
+        </div>
+        <button onclick="window.location.reload()" class="axa-btn" style="margin-top: 10px;">
+            Retry Connection
+        </button>
+    </div>
+</div>
+
+<div class="axa-card" style="margin-top: 20px;">
+    <div class="axa-section-title">Offline Data</div>
+    <div id="offlineDataInfo" style="text-align: center; padding: 15px 0;">
+        <p>Checking local data...</p>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
+        <button id="clearDataBtn" class="axa-btn" style="background-color: #f8f9fa; color: #e60028; border: 1px solid #e60028;">
+            Clear Local Data
+        </button>
+    </div>
+</div>
+
+<script>
+// Check for offline data when the page loads
+document.addEventListener('DOMContentLoaded', async () => {
+    const offlineDataInfo = document.getElementById('offlineDataInfo');
+    const clearDataBtn = document.getElementById('clearDataBtn');
+    
+    try {
+        // Check if IndexedDB is available
+        if (!('indexedDB' in window)) {
+            offlineDataInfo.innerHTML = '<p>Your browser does not support offline storage.</p>';
+            clearDataBtn.disabled = true;
+            return;
+        }
+        
+        // Open the database
+        const db = await openDatabase();
+        
+        // Count pending requests
+        const pendingTx = db.transaction(['pendingRequests'], 'readonly');
+        const pendingStore = pendingTx.objectStore('pendingRequests');
+        const pendingCount = await new Promise((resolve) => {
+            const countRequest = pendingStore.count();
+            countRequest.onsuccess = () => resolve(countRequest.result);
+            countRequest.onerror = () => resolve(0);
+        });
+        
+        // Count saved QR codes
+        const qrTx = db.transaction(['qrData'], 'readonly');
+        const qrStore = qrTx.objectStore('qrData');
+        const qrCount = await new Promise((resolve) => {
+            const countRequest = qrStore.count();
+            countRequest.onsuccess = () => resolve(countRequest.result);
+            countRequest.onerror = () => resolve(0);
+        });
+        
+        // Update UI with counts
+        offlineDataInfo.innerHTML = `
+            <p><strong>Local Storage:</strong></p>
+            <p>Pending sync: ${pendingCount} items</p>
+            <p>Saved QR codes: ${qrCount} items</p>
+        `;
+        
+        // Set up clear data button
+        clearDataBtn.addEventListener('click', async () => {
+            if (confirm('Are you sure you want to clear all locally stored data? This cannot be undone.')) {
+                try {
+                    await clearLocalData();
+                    offlineDataInfo.innerHTML = '<p>Local data has been cleared.</p>';
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } catch (error) {
+                    console.error('Error clearing local data:', error);
+                    offlineDataInfo.innerHTML = '<p>Error clearing local data. Please try again.</p>';
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error checking offline data:', error);
+        offlineDataInfo.innerHTML = '<p>Could not access local storage.</p>';
+        clearDataBtn.disabled = true;
+    }
+});
+
+// Helper function to open IndexedDB (same as in service worker)
+async function openDatabase() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('axa-offline-db', 1);
+        
+        request.onerror = (event) => {
+            console.error('Database error:', event.target.error);
+            reject(event.target.error);
+        };
+        
+        request.onsuccess = (event) => {
+            resolve(event.target.result);
+        };
+        
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            
+            if (!db.objectStoreNames.contains('pendingRequests')) {
+                const store = db.createObjectStore('pendingRequests', { keyPath: 'id', autoIncrement: true });
+                store.createIndex('timestamp', 'timestamp', { unique: false });
+            }
+            
+            if (!db.objectStoreNames.contains('qrData')) {
+                const store = db.createObjectStore('qrData', { keyPath: 'id' });
+                store.createIndex('timestamp', 'timestamp', { unique: false });
+            }
+        };
+    });
+}
+
+// Function to clear all local data
+async function clearLocalData() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.deleteDatabase('axa-offline-db');
+        
+        request.onsuccess = () => {
+            console.log('Database deleted successfully');
+            // Clear other caches if needed
+            if ('caches' in window) {
+                caches.keys().then(cacheNames => {
+                    return Promise.all(
+                        cacheNames.map(cacheName => caches.delete(cacheName))
+                    );
+                }).then(() => {
+                    console.log('All caches cleared');
+                    resolve();
+                });
+            } else {
+                resolve();
+            }
+        };
+        
+        request.onerror = (event) => {
+            console.error('Error deleting database:', event.target.error);
+            reject(event.target.error);
+        };
+    });
+}
+</script>
+{% endblock %}

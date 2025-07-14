@@ -1,0 +1,545 @@
+{% extends "base.html" %}
+
+{% block title %}AXA ADAPT - Your Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #1a1a1a;
+    }
+    
+    .form-helper {
+        font-size: 0.875rem;
+        color: #4a5568;
+        margin-top: 0.25rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #cbd5e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #0066CC;
+        box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        outline: none;
+    }
+    
+    .form-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.75rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+    
+    .checkbox-group, .radio-group {
+        margin-top: 0.5rem;
+    }
+    
+    .form-check {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+    
+    .form-check-input {
+        margin-right: 0.75rem;
+        margin-top: 0.25rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        border: 2px solid #cbd5e0;
+        border-radius: 4px;
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    
+    .form-check-input:checked {
+        background-color: #0066CC;
+        border-color: #0066CC;
+    }
+    
+    .form-check-input:checked::after {
+        content: '✓';
+        position: absolute;
+        color: white;
+        font-size: 0.875rem;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    .form-check-input[type="radio"] {
+        border-radius: 50%;
+    }
+    
+    .form-check-label {
+        flex: 1;
+        color: #1a1a1a;
+        cursor: pointer;
+    }
+    
+    .form-check-help {
+        display: block;
+        font-size: 0.875rem;
+        color: #4a5568;
+        margin-top: 0.25rem;
+        margin-left: 1.75rem;
+    }
+    
+    .btn-submit {
+        background-color: #0066CC;
+        color: white;
+        font-weight: 600;
+        padding: 0.875rem 1.75rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        max-width: 300px;
+        margin: 2rem auto 0;
+    }
+    
+    .btn-submit:hover {
+        background-color: #0052a3;
+    }
+    
+    .btn-submit:disabled {
+        background-color: #cbd5e0;
+        cursor: not-allowed;
+    }
+    
+    .btn-submit i {
+        margin-left: 0.5rem;
+    }
+    
+    .risk-factors {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .risk-factor-item {
+        background-color: #f8fafc;
+        border-left: 4px solid #0066CC;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .risk-factor-title {
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .risk-factor-title i {
+        margin-right: 0.5rem;
+        color: #0066CC;
+    }
+    
+    .risk-factor-desc {
+        font-size: 0.9375rem;
+        color: #4a5568;
+        line-height: 1.5;
+    }
+    
+    .age-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    .age-option {
+        position: relative;
+    }
+    
+    .age-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+    
+    .age-label {
+        display: block;
+        padding: 0.75rem;
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .age-option input[type="radio"]:checked + .age-label {
+        background-color: #e6f0ff;
+        border-color: #0066CC;
+        color: #0066CC;
+        font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-section {
+            padding: 1.5rem;
+        }
+        
+        .age-group {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="flex items-center mb-6">
+        <a href="{{ url_for('start_assessment') }}" class="text-axa-blue hover:text-axa-dark-blue mr-4">
+            <i class="bi bi-arrow-left text-xl"></i>
+        </a>
+        <h1 class="text-2xl font-bold text-axa-blue">Your Profile</h1>
+    </div>
+    
+    <div class="flex mb-6">
+        <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div class="bg-axa-blue h-2.5 rounded-full" style="width: 50%"></div>
+        </div>
+    </div>
+    
+    <div class="profile-section">
+        <p class="text-gray-700 mb-6">
+            Help us understand your needs better by answering a few questions about yourself. 
+            This information will help us provide personalized safety recommendations.
+        </p>
+        
+        <form id="profileForm" action="{{ url_for('assess_hazards') }}" method="post">
+            <!-- Basic Information -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold text-axa-blue mb-4">Basic Information</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-group">
+                        <label for="firstName" class="form-label">First Name</label>
+                        <input type="text" id="firstName" name="first_name" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lastName" class="form-label">Last Name</label>
+                        <input type="text" id="lastName" name="last_name" class="form-control" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Age Group</label>
+                    <div class="age-group">
+                        <div class="age-option">
+                            <input type="radio" id="age1" name="age_group" value="under_65" class="hidden" required>
+                            <label for="age1" class="age-label">Under 65</label>
+                        </div>
+                        <div class="age-option">
+                            <input type="radio" id="age2" name="age_group" value="65_74" class="hidden">
+                            <label for="age2" class="age-label">65-74</label>
+                        </div>
+                        <div class="age-option">
+                            <input type="radio" id="age3" name="age_group" value="75_84" class="hidden">
+                            <label for="age3" class="age-label">75-84</label>
+                        </div>
+                        <div class="age-option">
+                            <input type="radio" id="age4" name="age_group" value="85_plus" class="hidden">
+                            <label for="age4" class="age-label">85+</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobility Assessment -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold text-axa-blue mb-4">Mobility</h2>
+                
+                <div class="risk-factors">
+                    <div class="risk-factor-item">
+                        <h3 class="risk-factor-title">
+                            <i class="bi bi-person-walking"></i>
+                            Do you use any mobility aids?
+                        </h3>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="usesCane" name="mobility_aids" value="cane">
+                            <label class="form-check-label" for="usesCane">Cane</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="usesWalker" name="mobility_aids" value="walker">
+                            <label class="form-check-label" for="usesWalker">Walker</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="usesWheelchair" name="mobility_aids" value="wheelchair">
+                            <label class="form-check-label" for="usesWheelchair">Wheelchair</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="usesNone" name="mobility_aids" value="none" checked>
+                            <label class="form-check-label" for="usesNone">None</label>
+                        </div>
+                    </div>
+                    
+                    <div class="risk-factor-item mt-4">
+                        <h3 class="risk-factor-title">
+                            <i class="bi bi-activity"></i>
+                            Have you fallen in the past year?
+                        </h3>
+                        <div class="radio-group">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="previous_falls" id="fallYes" value="yes" required>
+                                <label class="form-check-label" for="fallYes">Yes</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="previous_falls" id="fallNo" value="no">
+                                <label class="form-check-label" for="fallNo">No</label>
+                            </div>
+                        </div>
+                        <div class="form-helper">
+                            A fall is when you unintentionally come to rest on the ground or a lower level.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vision Assessment -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold text-axa-blue mb-4">Vision</h2>
+                
+                <div class="risk-factors">
+                    <div class="risk-factor-item">
+                        <h3 class="risk-factor-title">
+                            <i class="bi bi-eye"></i>
+                            Do you have any vision problems?
+                        </h3>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="visionGlaucoma" name="vision_issues" value="glaucoma">
+                            <label class="form-check-label" for="visionGlaucoma">Glaucoma</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="visionCataracts" name="vision_issues" value="cataracts">
+                            <label class="form-check-label" for="visionCataracts">Cataracts</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="visionMacular" name="vision_issues" value="macular_degeneration">
+                            <label class="form-check-label" for="visionMacular">Macular Degeneration</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="visionDiabetic" name="vision_issues" value="diabetic_retinopathy">
+                            <label class="form-check-label" for="visionDiabetic">Diabetic Retinopathy</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="visionNone" name="vision_issues" value="none" checked>
+                            <label class="form-check-label" for="visionNone">No vision problems</label>
+                        </div>
+                    </div>
+                    
+                    <div class="risk-factor-item mt-4">
+                        <h3 class="risk-factor-title">
+                            <i class="bi bi-brightness-high"></i>
+                            Do you have difficulty seeing in low light?
+                        </h3>
+                        <div class="radio-group">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="low_light_vision" id="lowLightYes" value="yes" required>
+                                <label class="form-check-label" for="lowLightYes">Yes</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="low_light_vision" id="lowLightNo" value="no">
+                                <label class="form-check-label" for="lowLightNo">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cognitive Assessment -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-axa-blue mb-4">Cognitive Health</h2>
+                
+                <div class="risk-factors">
+                    <div class="risk-factor-item">
+                        <h3 class="risk-factor-title">
+                            <i class="bi bi-activity"></i>
+                            Have you been diagnosed with any cognitive conditions?
+                        </h3>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cogDementia" name="cognitive_conditions" value="dementia">
+                            <label class="form-check-label" for="cogDementia">Dementia</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cogAlz" name="cognitive_conditions" value="alzheimers">
+                            <label class="form-check-label" for="cogAlz">Alzheimer's Disease</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cogParkinsons" name="cognitive_conditions" value="parkinsons">
+                            <label class="form-check-label" for="cogParkinsons">Parkinson's Disease</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cogStroke" name="cognitive_conditions" value="stroke">
+                            <label class="form-check-label" for="cogStroke">History of Stroke</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="cogNone" name="cognitive_conditions" value="none" checked>
+                            <label class="form-check-label" for="cogNone">No cognitive conditions</label>
+                        </div>
+                    </div>
+                    
+                    <div class="risk-factor-item mt-4">
+                        <h3 class="risk-factor-title">
+                            <i class="bi bi-lightbulb"></i>
+                            Do you sometimes forget to take your medications?
+                        </h3>
+                        <div class="radio-group">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="forgets_meds" id="forgetMedsOften" value="often" required>
+                                <label class="form-check-label" for="forgetMedsOften">Often</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="forgets_meds" id="forgetMedsSometimes" value="sometimes">
+                                <label class="form-check-label" for="forgetMedsSometimes">Sometimes</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="forgets_meds" id="forgetMedsRarely" value="rarely">
+                                <label class="form-check-label" for="forgetMedsRarely">Rarely</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="forgets_meds" id="forgetMedsNever" value="never">
+                                <label class="form-check-label" for="forgetMedsNever">Never</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Medications -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold text-axa-blue mb-4">Medications</h2>
+                
+                <div class="form-group">
+                    <label for="medications" class="form-label">Current Medications (optional)</label>
+                    <textarea id="medications" name="medications" class="form-control" rows="3" 
+                        placeholder="List any medications you're currently taking, including dosage and frequency"></textarea>
+                    <div class="form-helper">
+                        Include both prescription and over-the-counter medications.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    Get My Assessment <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('profileForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Analyzing...';
+        
+        // In a real app, you would submit the form here
+        // form.submit();
+        
+        // For demo purposes, we'll just show an alert
+        setTimeout(() => {
+            alert('Form would be submitted to the server in a real app.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Get My Assessment <i class="bi bi-arrow-right"></i>';
+            
+            // Uncomment this in the real implementation:
+            // window.location.href = '{{ url_for("assessment_results") }}';
+        }, 1500);
+    });
+    
+    // Handle mobility aids selection
+    const mobilityAids = document.querySelectorAll('input[name="mobility_aids"]');
+    mobilityAids.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (this.value === 'none' && this.checked) {
+                // If "None" is checked, uncheck all others
+                mobilityAids.forEach(cb => {
+                    if (cb.value !== 'none') cb.checked = false;
+                });
+            } else if (this.value !== 'none' && this.checked) {
+                // If any other option is checked, uncheck "None"
+                document.querySelector('input[name="mobility_aids"][value="none"]').checked = false;
+            }
+        });
+    });
+    
+    // Handle vision issues selection
+    const visionIssues = document.querySelectorAll('input[name="vision_issues"]');
+    visionIssues.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (this.value === 'none' && this.checked) {
+                // If "No vision problems" is checked, uncheck all others
+                visionIssues.forEach(cb => {
+                    if (cb.value !== 'none') cb.checked = false;
+                });
+            } else if (this.value !== 'none' && this.checked) {
+                // If any other option is checked, uncheck "No vision problems"
+                document.querySelector('input[name="vision_issues"][value="none"]').checked = false;
+            }
+        });
+    });
+    
+    // Handle cognitive conditions selection
+    const cognitiveConditions = document.querySelectorAll('input[name="cognitive_conditions"]');
+    cognitiveConditions.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (this.value === 'none' && this.checked) {
+                // If "No cognitive conditions" is checked, uncheck all others
+                cognitiveConditions.forEach(cb => {
+                    if (cb.value !== 'none') cb.checked = false;
+                });
+            } else if (this.value !== 'none' && this.checked) {
+                // If any other option is checked, uncheck "No cognitive conditions"
+                document.querySelector('input[name="cognitive_conditions"][value="none"]').checked = false;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

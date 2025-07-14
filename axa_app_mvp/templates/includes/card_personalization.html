@@ -1,0 +1,136 @@
+<!-- Card Personalization Section -->
+<div class="card-personalization">
+  <!-- Left Column: Card Preview -->
+  <div class="card-preview-section">
+    <h3 class="card-preview-title">Card Preview</h3>
+    <div class="card-preview-container">
+      <div class="card-preview" style="background-color: #0066CC; color: #FFFFFF;">
+        <div class="card-preview-overlay"></div>
+        <div class="card-preview-content">
+          <div class="card-preview-header">
+            <img src="{{ url_for('static', filename='img/axa-logo-white.svg') }}" alt="AXA" class="card-preview-logo">
+            <div class="card-preview-qr">
+              <img src="{{ url_for('static', filename='img/qr-placeholder.png') }}" alt="QR Code" width="100%" height="100%">
+            </div>
+          </div>
+          <div class="card-preview-body">
+            <h4 class="card-preview-title-text">Emergency Health Information</h4>
+            <p class="card-preview-subtitle">Scan this QR code to view my health information</p>
+          </div>
+          <div class="card-preview-footer">
+            <span>AXA ADAPT</span>
+            <span>#StayProtected</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Right Column: Personalization Controls -->
+  <div class="personalization-controls">
+    <!-- Background Customization -->
+    <div class="personalization-section">
+      <h4 class="section-title"><i class="bi bi-image"></i> Background</h4>
+      
+      <!-- Upload Custom Background -->
+      <div class="background-upload">
+        <div class="upload-preview" id="upload-preview">
+          <div class="upload-content">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <p>Click to upload a custom background</p>
+            <small class="text-muted">Max. 2MB (JPG, PNG)</small>
+          </div>
+        </div>
+        <input type="file" id="background-upload" accept="image/*" class="d-none">
+        <div class="d-flex justify-content-between mt-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="remove-bg" disabled>
+            <i class="bi bi-trash me-1"></i> Remove
+          </button>
+          <small class="text-muted">or choose a preset:</small>
+        </div>
+      </div>
+      
+      <!-- Preset Backgrounds -->
+      <div class="preset-backgrounds mt-3">
+        <div class="preset-bg active" style="background-image: url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80');" data-bg-image="https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"></div>
+        <div class="preset-bg" style="background-image: url('https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80');" data-bg-image="https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"></div>
+        <div class="preset-bg" style="background-image: url('https://images.unsplash.com/photo-1505142468610-359e7d316be0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80');" data-bg-image="https://images.unsplash.com/photo-1505142468610-359e7d316be0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"></div>
+        <div class="preset-bg" style="background-color: #0066CC;" data-bg-color="#0066CC"></div>
+      </div>
+    </div>
+    
+    <!-- Color Scheme -->
+    <div class="personalization-section">
+      <h4 class="section-title"><i class="bi bi-palette"></i> Color Scheme</h4>
+      <div class="color-schemes">
+        <div class="color-option active" data-color="#0066CC" data-color-type="background" style="background-color: #0066CC;" title="AXA Blue">
+          <span class="color-tooltip">AXA Blue</span>
+        </div>
+        <div class="color-option" data-color="#003366" data-color-type="background" style="background-color: #003366;" title="Dark Blue">
+          <span class="color-tooltip">Dark Blue</span>
+        </div>
+        <div class="color-option" data-color="#0099FF" data-color-type="background" style="background-color: #0099FF;" title="Light Blue">
+          <span class="color-tooltip">Light Blue</span>
+        </div>
+        <div class="color-option" data-color="#00A651" data-color-type="background" style="background-color: #00A651;" title="Green">
+          <span class="color-tooltip">Green</span>
+        </div>
+        <div class="color-option" data-color="#E60028" data-color-type="background" style="background-color: #E60028;" title="Red">
+          <span class="color-tooltip">Red</span>
+        </div>
+        <div class="color-option" data-color="#5F6A72" data-color-type="background" style="background-color: #5F6A72;" title="Gray">
+          <span class="color-tooltip">Gray</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Text Customization -->
+    <div class="personalization-section">
+      <h4 class="section-title"><i class="bi bi-text-paragraph"></i> Text</h4>
+      <div class="mb-3">
+        <label for="card-title" class="form-label">Title</label>
+        <input type="text" class="form-control" id="card-title" value="Emergency Health Information">
+      </div>
+      <div class="mb-3">
+        <label for="card-subtitle" class="form-label">Subtitle</label>
+        <input type="text" class="form-control" id="card-subtitle" value="Scan this QR code to view my health information">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Text Color</label>
+        <div class="color-schemes">
+          <div class="color-option active" data-color="#FFFFFF" data-color-type="text" style="background-color: #FFFFFF; border: 1px solid #ddd;" title="White">
+            <span class="color-tooltip">White</span>
+          </div>
+          <div class="color-option" data-color="#F8F9FA" data-color-type="text" style="background-color: #F8F9FA; border: 1px solid #ddd;" title="Light Gray">
+            <span class="color-tooltip">Light Gray</span>
+          </div>
+          <div class="color-option" data-color="#E9ECEF" data-color-type="text" style="background-color: #E9ECEF; border: 1px solid #ddd;" title="Lighter Gray">
+            <span class="color-tooltip">Lighter Gray</span>
+          </div>
+          <div class="color-option" data-color="#212529" data-color-type="text" style="background-color: #212529;" title="Dark Gray">
+            <span class="color-tooltip">Dark Gray</span>
+          </div>
+          <div class="color-option" data-color="#000000" data-color-type="text" style="background-color: #000000;" title="Black">
+            <span class="color-tooltip">Black</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="d-flex flex-wrap gap-2 mt-4">
+      <button type="button" class="btn btn-outline-secondary btn-reset">
+        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+      </button>
+      <button type="button" class="btn btn-primary btn-save ms-auto">
+        <i class="bi bi-save me-1"></i> Save Design
+      </button>
+      <button type="button" class="btn btn-success btn-print">
+        <i class="bi bi-printer me-1"></i> Print Card
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Include the card personalization JS -->
+<script src="{{ url_for('static', filename='js/card-personalization.js') }}"></script>

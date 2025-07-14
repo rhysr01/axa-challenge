@@ -1,0 +1,720 @@
+{% extends "base.html" %}
+
+{% block title %}AXA ADAPT - Your Home Safety Report{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    .risk-score {
+        text-align: center;
+        padding: 2rem;
+        margin: 2rem 0;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #f8fafc 0%, #f0f7ff 100%);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .risk-level {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .risk-score-value {
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1;
+        margin: 1rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .risk-score-label {
+        font-size: 1.25rem;
+        color: #4a5568;
+        margin-bottom: 1rem;
+    }
+    
+    .risk-low {
+        color: #00A651; /* Green */
+    }
+    
+    .risk-moderate {
+        color: #FFB81C; /* Yellow */
+    }
+    
+    .risk-high {
+        color: #E60028; /* Red */
+    }
+    
+    .risk-very-high {
+        color: #8B0000; /* Dark Red */
+    }
+    
+    .risk-meter {
+        height: 12px;
+        background: #e2e8f0;
+        border-radius: 6px;
+        margin: 1rem 0;
+        overflow: hidden;
+    }
+    
+    .risk-meter-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 6px;
+        transition: width 1s ease-in-out;
+    }
+    
+    .hazard-card {
+        border-left: 4px solid #E60028;
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        background-color: #fff5f5;
+        transition: all 0.3s ease;
+    }
+    
+    .hazard-card.moderate {
+        border-left-color: #FFB81C;
+        background-color: #fffaf0;
+    }
+    
+    .hazard-card.low {
+        border-left-color: #00A651;
+        background-color: #f0fdf4;
+    }
+    
+    .hazard-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        cursor: pointer;
+    }
+    
+    .hazard-title {
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .hazard-icon {
+        margin-right: 0.75rem;
+        font-size: 1.25rem;
+    }
+    
+    .hazard-risk {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .risk-low-badge {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+    
+    .risk-moderate-badge {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    
+    .risk-high-badge {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .hazard-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+    }
+    
+    .hazard-card.active .hazard-content {
+        max-height: 1000px; /* Adjust based on content */
+        margin-top: 1rem;
+    }
+    
+    .hazard-details {
+        padding: 1rem 0;
+        border-top: 1px solid #e2e8f0;
+        margin-top: 1rem;
+    }
+    
+    .hazard-room {
+        display: inline-block;
+        background-color: #e2e8f0;
+        color: #4a5568;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .recommendation {
+        display: flex;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px dashed #e2e8f0;
+    }
+    
+    .recommendation:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    .recommendation-icon {
+        flex-shrink: 0;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background-color: #e6f0ff;
+        color: #0066CC;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 1rem;
+    }
+    
+    .recommendation-content {
+        flex: 1;
+    }
+    
+    .recommendation-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: #1a1a1a;
+    }
+    
+    .recommendation-desc {
+        color: #4a5568;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+    }
+    
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 2rem;
+        justify-content: center;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-align: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+    }
+    
+    .btn-primary {
+        background-color: #0066CC;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0052a3;
+    }
+    
+    .btn-outline {
+        background-color: white;
+        color: #0066CC;
+        border: 1px solid #0066CC;
+    }
+    
+    .btn-outline:hover {
+        background-color: #f0f7ff;
+    }
+    
+    .btn i {
+        margin-right: 0.5rem;
+    }
+    
+    .room-section {
+        margin-bottom: 2.5rem;
+    }
+    
+    .room-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .room-icon {
+        width: 40px;
+        height: 40px;
+        background-color: #e6f0ff;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: #0066CC;
+        font-size: 1.25rem;
+    }
+    
+    .room-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0;
+    }
+    
+    .print-only {
+        display: none;
+    }
+    
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        
+        .print-only {
+            display: block;
+        }
+        
+        body {
+            background: white;
+            color: black;
+            font-size: 12pt;
+        }
+        
+        .report-section {
+            box-shadow: none;
+            border: 1px solid #e2e8f0;
+            page-break-inside: avoid;
+        }
+        
+        .hazard-card {
+            page-break-inside: avoid;
+        }
+        
+        .action-buttons {
+            display: none;
+        }
+        
+        .risk-score {
+            page-break-after: avoid;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .report-section {
+            padding: 1.5rem;
+        }
+        
+        .risk-score {
+            padding: 1.5rem 1rem;
+        }
+        
+        .risk-score-value {
+            font-size: 2.75rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="flex items-center mb-6 no-print">
+        <a href="{{ url_for('home') }}" class="text-axa-blue hover:text-axa-dark-blue mr-4">
+            <i class="bi bi-arrow-left text-xl"></i>
+        </a>
+        <h1 class="text-2xl font-bold text-axa-blue">Your Home Safety Report</h1>
+    </div>
+    
+    <div class="print-only text-center mb-6">
+        <img src="{{ url_for('static', filename='img/axa-logo.png') }}" alt="AXA" class="h-10 mx-auto mb-4">
+        <h1 class="text-2xl font-bold text-axa-blue">Home Safety Assessment Report</h1>
+        <p class="text-gray-600">Generated on {{ current_date }}</p>
+    </div>
+    
+    <div class="report-section">
+        <div class="risk-score">
+            <div class="risk-level">Your Home Safety Score</div>
+            <div class="risk-score-value risk-moderate">68</div>
+            <div class="risk-score-label">Moderate Risk</div>
+            <div class="risk-meter">
+                <div class="risk-meter-fill" style="width: 68%; background-color: #FFB81C;"></div>
+            </div>
+            <div class="flex justify-between text-sm text-gray-600 mt-1">
+                <span>Low Risk</span>
+                <span>High Risk</span>
+            </div>
+        </div>
+        
+        <p class="text-center text-gray-700 mb-6">
+            Based on our assessment, we've identified several areas where we can help improve your home's safety.
+            Below are the key findings and recommendations.
+        </p>
+        
+        <div class="action-buttons no-print">
+            <button onclick="window.print()" class="btn btn-outline">
+                <i class="bi bi-printer"></i> Print Report
+            </button>
+            <button class="btn btn-primary" id="savePdfBtn">
+                <i class="bi bi-download"></i> Save as PDF
+            </button>
+        </div>
+    </div>
+    
+    <!-- High Priority Hazards -->
+    <div class="report-section">
+        <h2 class="text-xl font-semibold text-axa-blue mb-4">High Priority Hazards</h2>
+        <p class="text-gray-700 mb-4">These issues should be addressed as soon as possible to reduce fall risks.</p>
+        
+        <div class="hazard-card" id="hazard1">
+            <div class="hazard-header" onclick="toggleHazard('hazard1')">
+                <h3 class="hazard-title">
+                    <span class="hazard-icon">⚠️</span>
+                    Slippery Bathroom Floor
+                </h3>
+                <span class="hazard-risk risk-high-badge">High Risk</span>
+            </div>
+            <div class="hazard-content">
+                <div class="hazard-details">
+                    <div class="flex flex-wrap mb-4">
+                        <span class="hazard-room">Bathroom</span>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        The bathroom floor becomes slippery when wet, increasing the risk of falls, especially when getting in and out of the shower or bath.
+                    </p>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-icon">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h4 class="recommendation-title">Install Non-Slip Mats</h4>
+                            <p class="recommendation-desc">
+                                Place non-slip mats both inside and outside the shower/bathtub. Ensure they have suction cups on the bottom to prevent slipping.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-icon">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h4 class="recommendation-title">Add Grab Bars</h4>
+                            <p class="recommendation-desc">
+                                Install grab bars near the toilet and in the shower to provide support when moving around the bathroom.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-icon">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h4 class="recommendation-title">Consider a Shower Chair</h4>
+                            <p class="recommendation-desc">
+                                A shower chair can provide stability while bathing and reduce the risk of falls.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="hazard-card" id="hazard2">
+            <div class="hazard-header" onclick="toggleHazard('hazard2')">
+                <h3 class="hazard-title">
+                    <span class="hazard-icon">⚠️</span>
+                    Poor Lighting in Hallway
+                </h3>
+                <span class="hazard-risk risk-high-badge">High Risk</span>
+            </div>
+            <div class="hazard-content">
+                <div class="hazard-details">
+                    <div class="flex flex-wrap mb-4">
+                        <span class="hazard-room">Hallway</span>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        The hallway has insufficient lighting, making it difficult to see obstacles, especially at night.
+                    </p>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-icon">
+                            <i class="bi bi-lightbulb"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h4 class="recommendation-title">Install Night Lights</h4>
+                            <p class="recommendation-desc">
+                                Add motion-activated night lights along the hallway to provide illumination when moving around at night.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-icon">
+                            <i class="bi bi-lightbulb"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h4 class="recommendation-title">Increase Overall Lighting</h4>
+                            <p class="recommendation-desc">
+                                Consider adding additional light fixtures or using brighter bulbs to improve visibility.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Moderate Priority Hazards -->
+    <div class="report-section">
+        <h2 class="text-xl font-semibold text-axa-blue mb-4">Moderate Priority Hazards</h2>
+        <p class="text-gray-700 mb-4">These issues should be addressed to further reduce fall risks.</p>
+        
+        <div class="hazard-card moderate" id="hazard3">
+            <div class="hazard-header" onclick="toggleHazard('hazard3')">
+                <h3 class="hazard-title">
+                    <span class="hazard-icon">ℹ️</span>
+                    Loose Rugs in Living Area
+                </h3>
+                <span class="hazard-risk risk-moderate-badge">Moderate Risk</span>
+            </div>
+            <div class="hazard-content">
+                <div class="hazard-details">
+                    <div class="flex flex-wrap mb-4">
+                        <span class="hazard-room">Living Room</span>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        Loose rugs can slip or bunch up, creating a tripping hazard.
+                    </p>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-icon">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h4 class="recommendation-title">Secure or Remove Rugs</h4>
+                            <p class="recommendation-desc">
+                                Use double-sided tape or non-slip pads to secure rugs to the floor, or consider removing them entirely.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="hazard-card moderate" id="hazard4">
+            <div class="hazard-header" onclick="toggleHazard('hazard4')">
+                <h3 class="hazard-title">
+                    <span class="hazard-icon">ℹ️</span>
+                    Cluttered Walkways
+                </h3>
+                <span class="hazard-risk risk-moderate-badge">Moderate Risk</span>
+            </div>
+            <div class="hazard-content">
+                <div class="hazard-details">
+                    <div class="flex flex-wrap mb-4">
+                        <span class="hazard-room">Hallway</span>
+                        <span class="hazard-room">Bedroom</span>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        Objects in walkways can be tripping hazards, especially in low-light conditions.
+                    </p>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-icon">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h4 class="recommendation-title">Clear Walkways</h4>
+                            <p class="recommendation-desc">
+                                Keep pathways clear of clutter, electrical cords, and other tripping hazards.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-icon">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h4 class="recommendation-title">Organize Cables</h4>
+                            <p class="recommendation-desc">
+                                Use cable organizers to keep electrical cords out of walkways.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Low Priority Hazards -->
+    <div class="report-section">
+        <h2 class="text-xl font-semibold text-axa-blue mb-4">Low Priority Hazards</h2>
+        <p class="text-gray-700 mb-4">These are minor issues that can be addressed for optimal safety.</p>
+        
+        <div class="hazard-card low" id="hazard5">
+            <div class="hazard-header" onclick="toggleHazard('hazard5')">
+                <h3 class="hazard-title">
+                    <span class="hazard-icon">ℹ️</span>
+                    Bed Height
+                </h3>
+                <span class="hazard-risk risk-low-badge">Low Risk</span>
+            </div>
+            <div class="hazard-content">
+                <div class="hazard-details">
+                    <div class="flex flex-wrap mb-4">
+                        <span class="hazard-room">Bedroom</span>
+                    </div>
+                    <p class="text-gray-700 mb-4">
+                        The bed may be too high or too low for safe and comfortable transfers.
+                    </p>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-icon">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                        <div class="recommendation-content">
+                            <h4 class="recommendation-title">Adjust Bed Height</h4>
+                            <p class="recommendation-desc">
+                                The ideal bed height allows you to sit with your feet flat on the floor and your knees at a 90-degree angle.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Next Steps -->
+    <div class="report-section">
+        <h2 class="text-xl font-semibold text-axa-blue mb-4">Next Steps</h2>
+        <p class="text-gray-700 mb-4">
+            Based on your assessment, here are some recommended next steps to improve your home safety:
+        </p>
+        
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-info-circle-fill text-blue-400 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700">
+                        Consider scheduling a free home safety consultation with one of our AXA specialists for personalized recommendations.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white p-4 rounded-lg border border-gray-200">
+                <h3 class="font-semibold text-gray-800 mb-2">Immediate Actions (0-7 days)</h3>
+                <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                    <li>Install non-slip mats in the bathroom</li>
+                    <li>Add night lights in the hallway</li>
+                    <li>Secure or remove loose rugs</li>
+                    <li>Clear walkways of clutter</li>
+                </ul>
+            </div>
+            
+            <div class="bg-white p-4 rounded-lg border border-gray-200">
+                <h3 class="font-semibold text-gray-800 mb-2">Next Steps (1-4 weeks)</h3>
+                <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                    <li>Install grab bars in the bathroom</li>
+                    <li>Consider a shower chair</li>
+                    <li>Improve overall lighting</li>
+                    <li>Organize cables and cords</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="mt-8 text-center no-print">
+            <p class="text-gray-700 mb-4">Would you like to create a QR code to share this report with family or caregivers?</p>
+            <a href="{{ url_for('qr_tool_start') }}" class="btn btn-primary inline-flex items-center">
+                <i class="bi bi-qr-code"></i> Create Shareable QR Code
+            </a>
+        </div>
+    </div>
+    
+    <div class="text-center text-gray-500 text-sm mt-8 mb-4 no-print">
+        <p>This report was generated on {{ current_date }}. For the most up-to-date assessment, please complete a new home safety evaluation.</p>
+        <p class="mt-2">© {{ current_date.year }} AXA. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set current date for the report
+    document.addEventListener('DOMContentLoaded', function() {
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const currentDateElements = document.querySelectorAll('.current-date');
+        currentDateElements.forEach(el => {
+            el.textContent = now.toLocaleDateString('en-US', options);
+        });
+        
+        // Initialize hazard cards to be expanded by default
+        document.querySelectorAll('.hazard-card').forEach(card => {
+            card.classList.add('active');
+        });
+    });
+    
+    // Toggle hazard details
+    function toggleHazard(id) {
+        const hazard = document.getElementById(id);
+        hazard.classList.toggle('active');
+    }
+    
+    // Save as PDF functionality (placeholder)
+    document.getElementById('savePdfBtn').addEventListener('click', function() {
+        // In a real implementation, this would generate and download a PDF
+        alert('In a real implementation, this would generate and download a PDF version of the report.');
+    });
+    
+    // Print styles
+    window.addEventListener('beforeprint', function() {
+        // Expand all hazards for printing
+        document.querySelectorAll('.hazard-card').forEach(card => {
+            card.classList.add('active');
+        });
+    });
+    
+    // Auto-close print dialog after printing
+    window.onafterprint = function() {
+        // Reset any print-specific styles if needed
+    };
+</script>
+{% endblock %}
