@@ -1,0 +1,142 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-07-14",
+  "description": "Consolidated configuration for AXA ADAPT fall hazard detection system",
+  
+  "hazards": [
+    {
+      "id": "loose_rugs",
+      "display_name": "Loose Rugs",
+      "weights": {
+        "mobility": 2,
+        "vision": 1,
+        "cognition": 1
+      },
+      "base_score": 10,
+      "description": "Rugs that can slip or bunch up, creating a trip hazard"
+    },
+    {
+      "id": "poor_lighting",
+      "display_name": "Poor Lighting",
+      "weights": {
+        "mobility": 1,
+        "vision": 2,
+        "cognition": 1
+      },
+      "base_score": 8,
+      "description": "Insufficient lighting that makes hazards difficult to see"
+    },
+    {
+      "id": "steps_or_thresholds",
+      "display_name": "Steps/Thresholds",
+      "weights": {
+        "mobility": 2,
+        "vision": 1,
+        "cognition": 2
+      },
+      "base_score": 12,
+      "description": "Raised surfaces that can be difficult to navigate"
+    },
+    {
+      "id": "no_grab_bars",
+      "display_name": "No Grab Bars",
+      "weights": {
+        "mobility": 2,
+        "vision": 1,
+        "cognition": 2
+      },
+      "base_score": 15,
+      "description": "Missing support bars in critical areas like bathrooms"
+    },
+    {
+      "id": "clutter",
+      "display_name": "Clutter",
+      "weights": {
+        "mobility": 2,
+        "vision": 1,
+        "cognition": 2
+      },
+      "base_score": 12,
+      "description": "Objects that obstruct walkways and create trip hazards"
+    }
+  ],
+  
+  "detection_mappings": [
+    {
+      "object": "cord",
+      "hazard_id": "clutter",
+      "example": "Loose electrical cord in walkway",
+      "notes": "Trip hazard, especially for mobility issues"
+    },
+    {
+      "object": "rug",
+      "hazard_id": "loose_rugs",
+      "example": "Small throw rug in bedroom",
+      "notes": "Can slip or bunch up"
+    },
+    {
+      "object": "missing_grab_bar",
+      "hazard_id": "no_grab_bars",
+      "example": "No grab bar in bathroom",
+      "notes": "Increases fall risk for elderly"
+    },
+    {
+      "object": "box",
+      "hazard_id": "clutter",
+      "example": "Storage box in hallway",
+      "notes": "Obstructs path"
+    },
+    {
+      "object": "wet_floor",
+      "hazard_id": "poor_lighting",
+      "example": "Wet floor not visible due to poor lighting",
+      "notes": "Combined hazard"
+    },
+    {
+      "object": "shoes",
+      "hazard_id": "clutter",
+      "example": "Shoes left at entrance",
+      "notes": "Common trip hazard"
+    },
+    {
+      "object": "threshold",
+      "hazard_id": "steps_or_thresholds",
+      "example": "Raised threshold between rooms",
+      "notes": "Difficult for mobility aids"
+    },
+    {
+      "object": "light_bulb_out",
+      "hazard_id": "poor_lighting",
+      "example": "Burned out bulb in hallway",
+      "notes": "Poor visibility"
+    }
+  ],
+  
+  "risk_thresholds": [
+    {
+      "label": "Low",
+      "min_score": 0,
+      "max_score": 33,
+      "color": "green"
+    },
+    {
+      "label": "Medium",
+      "min_score": 34,
+      "max_score": 66,
+      "color": "yellow"
+    },
+    {
+      "label": "High",
+      "min_score": 67,
+      "max_score": 100,
+      "color": "red"
+    }
+  ],
+  
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-07-14",
+    "author": "AXA ADAPT Team",
+    "description": "Consolidated configuration for fall hazard detection system"
+  }
+}

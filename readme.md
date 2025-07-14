@@ -3,33 +3,184 @@
 <div align="center">
   <p align="center">
     <a href="#features">Features</a> •
+    <a href="#dashboard">Dashboard</a> 📄 2. Add Docstrings to Core Services and Functions
+🎯 Why:
+Auto-generates proper DeepWiki docs
+
+Helps execs, junior devs, and future teammates understand logic
+
+✅ What to Ask Augment:
+text
+Copy
+Edit
+Add type-annotated docstrings to the following:
+- `QRService.generate_qr()`
+- `HazardService.assess_hazards()`
+- `score_hazards()` in hazard_scoring.py
+
+Each docstring should explain purpose, parameters, return structure, and edge cases.
+•
+    <a href="#accessibility">Accessibility</a> •
     <a href="#quick-start">Quick Start</a> •
     <a href="#api-documentation">API Docs</a> •
     <a href="#development">Development</a>
   </p>
   
   [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-  [![FastAPI](https://img.shields.io/badge/FastAPI-0.68.0-009688.svg)](https://fastapi.tiangolo.com/)
+  [![FastAPI](https://img.shields.io/badge/FastAPI-0.95.0-009688.svg)](https://fastapi.tiangolo.com/)
   [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+  [![Accessibility](https://img.shields.io/badge/Accessibility-WCAG_2.1_AA-2B579A.svg)](https://www.w3.org/TR/WCAG21/)
 </div>
 
 ## Features
 
-- Image-based hazard detection using YOLOv8
-- Risk scoring based on user profiles (mobility, vision, cognition)
-- Secure QR code generation for health data access
-- Responsive web interface for results visualization
-- Scalable API architecture
+### 🚀 New Dashboard
+- Modern, intuitive interface with two main workflows
+- Real-time room scan analysis with hazard detection
+- Secure QR health data generator with customizable access levels
+- Interactive visualizations and actionable insights
+
+### 🔍 Room Scan Mode
+- Upload room images for automatic hazard detection
+- Real-time validation and progress feedback
+- Risk assessment visualization with color-coded scoring
+- PDF report generation with recommendations
+
+### 🏥 QR Health Data Mode
+- Multi-step form with instant validation
+- Customizable access levels and privacy settings
+- Expiry and security controls
+- QR card personalization with photos
+
+### ♿ Accessibility First
+- WCAG 2.1 AA compliant
+- Keyboard navigation and screen reader support
+- High contrast and dark mode support
+- Responsive design for all devices
 
 ## Tech Stack
 
-- **Backend**: FastAPI
-- **Computer Vision**: YOLOv8, OpenCV
-- **Authentication**: JWT Tokens
-- **Data Processing**: NumPy, Pillow
-- **QR Generation**: qrcode
-- **Testing**: Pytest
-- **Containerization**: Docker
+- **Frontend**: 
+  - HTML5, CSS3, JavaScript (ES6+)
+  - Bootstrap 5 with AXA brand theming
+  - Responsive design with mobile-first approach
+  - Chart.js for data visualization
+
+- **Backend**: 
+  - FastAPI 0.95.0
+  - Python 3.9+
+  - Uvicorn ASGI server
+
+- **Computer Vision**: 
+  - YOLOv8 for object detection
+  - OpenCV for image processing
+  - Custom hazard detection algorithms
+
+- **Data & Storage**:
+  - SQLAlchemy ORM
+  - SQLite (development) / PostgreSQL (production)
+  - Redis for caching
+
+- **Security**:
+  - JWT Authentication
+  - Rate limiting
+  - CORS protection
+  - Input validation
+
+- **DevOps**:
+  - Docker & Docker Compose
+  - GitHub Actions for CI/CD
+  - Pytest for testing
+  - Pre-commit hooks
+
+## Configuration
+
+The application uses a consolidated JSON configuration file (`axa_app_mvp/logic/config.json`) for all hazard detection and scoring parameters. This replaces the previous CSV-based configuration system.
+
+### Configuration Structure
+
+```json
+{
+  "version": "1.0.0",
+  "last_updated": "2025-07-14",
+  "description": "Consolidated configuration for AXA ADAPT fall hazard detection system",
+  
+  "hazards": [
+    {
+      "id": "loose_rugs",
+      "display_name": "Loose Rugs",
+      "weights": {
+        "mobility": 2,
+        "vision": 1,
+        "cognition": 1
+      },
+      "base_score": 10,
+      "description": "Rugs that can slip or bunch up, creating a trip hazard"
+    },
+    ...
+  ],
+  
+  "detection_mappings": [
+    {
+      "object": "rug",
+      "hazard_id": "loose_rugs",
+      "example": "Small throw rug in bedroom",
+      "notes": "Can slip or bunch up"
+    },
+    ...
+  ],
+  
+  "risk_thresholds": [
+    {
+      "label": "Low",
+      "min_score": 0,
+      "max_score": 33,
+      "color": "green"
+    },
+    ...
+  ]
+}
+```
+
+### Key Sections
+
+1. **Hazards**
+   - Defines all hazard types with their properties
+   - Each hazard includes:
+     - `id`: Unique identifier
+     - `display_name`: Human-readable name
+     - `weights`: Impact weights for different user profiles
+     - `base_score`: Base risk score (0-100)
+     - `description`: Explanation of the hazard
+
+2. **Detection Mappings**
+   - Maps detected objects to hazard types
+   - Each mapping includes:
+     - `object`: Name of the detected object (from YOLO)
+     - `hazard_id`: Reference to a hazard ID
+     - `example`: Example scenario
+     - `notes`: Additional context
+
+3. **Risk Thresholds**
+   - Defines risk categories (Low, Medium, High)
+   - Each threshold includes:
+     - `label`: Risk level name
+     - `min_score`/`max_score`: Score range
+     - `color`: Display color
+
+### Updating Configuration
+
+1. Edit the `config.json` file
+2. No need to modify code for most changes
+3. The application will automatically reload the configuration on next request
+
+### Validation
+
+The configuration is validated on application startup. Common validation includes:
+- Required fields for each section
+- Valid score ranges (0-100)
+- Consistent hazard references
+- Non-overlapping risk thresholds
 
 ## Prerequisites
 
@@ -37,47 +188,135 @@
 - Docker (optional)
 - Make (for development)
 
-## Installation
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.9 or higher
+- Node.js 16+ (for frontend assets)
+- Docker (optional, for containerized deployment)
+
+### Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/axa-adapt.git
-   cd axa-adapt
+   git clone https://github.com/axa/adapt-fall-prevention.git
+   cd adapt-fall-prevention
    ```
 
-2. Create and activate a virtual environment:
+2. Set up Python environment:
    ```bash
    python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install dependencies:
-   ```bash
+   source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+   pip install --upgrade pip
    pip install -r requirements.txt
    ```
 
-4. Set up environment variables:
+3. Set up frontend assets:
+   ```bash
+   cd axa_app_mvp/static
+   npm install
+   npm run build
+   cd ../..
+   ```
+
+4. Configure environment:
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
-## Running the Application
+5. Initialize the database:
+   ```bash
+   python -m axa_app_mvp.db.init_db
+   ```
 
-### Development
+## 🏃‍♂️ Running the Application
 
-```bash
-uvicorn main:app --reload
+### Development Mode
+
+1. Start the backend server:
+   ```bash
+   uvicorn main:app --reload --port 8000
+   ```
+
+2. In a new terminal, start the frontend development server:
+   ```bash
+   cd axa_app_mvp/static
+   npm run dev
+   ```
+
+3. Access the application at: http://localhost:3000
+
+### Production Deployment with Docker
+
+1. Build and start the containers:
+   ```bash
+   docker-compose -f docker-compose.prod.yml up --build -d
+   ```
+
+2. The application will be available at: http://localhost:8000
+
+3. To monitor logs:
+   ```bash
+   docker-compose -f docker-compose.prod.yml logs -f
+   ```
+
+### Environment Variables
+
+Key environment variables (set in `.env`):
+
+```ini
+# Application
+APP_ENV=development
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+
+# Database
+DATABASE_URL=sqlite:///./axa_adapt.db
+# For PostgreSQL: postgresql://user:password@localhost/axa_adapt
+
+# Security
+JWT_SECRET_KEY=your-jwt-secret
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+# CORS (comma-separated origins)
+CORS_ORIGINS=http://localhost:3000,http://localhost:8000
 ```
 
-### Production (Docker)
+## ♿ Accessibility Features
 
-```bash
-docker build -t axa-adapt .
-docker run -p 8000:8000 axa-adapt
-```
+### Implemented
+- **Keyboard Navigation**: Full keyboard accessibility
+- **Screen Reader Support**: ARIA labels and roles
+- **High Contrast Mode**: System preference detection
+- **Skip Links**: Quick access to main content
+- **Form Validation**: Real-time feedback
+- **Responsive Design**: Mobile-first approach
 
-## API Documentation
+### WCAG 2.1 AA Compliance
+- Perceivable: Text alternatives, time-based media, adaptable content
+- Operable: Keyboard accessible, enough time, navigable
+- Understandable: Readable, predictable, input assistance
+- Robust: Compatible with assistive technologies
+
+## 📊 Dashboard
+
+The AXA ADAPT dashboard provides two main workflows:
+
+### 1. Room Scan Mode
+- Upload images of different rooms
+- Automatic hazard detection
+- Risk assessment based on user profile
+- Detailed reports with recommendations
+
+### 2. QR Health Data Mode
+- Secure health information storage
+- Customizable access levels
+- Emergency medical information
+- Printable QR cards
+
+## 📚 API Documentation
 
 ### Interactive Documentation
 - Swagger UI: http://localhost:8000/docs

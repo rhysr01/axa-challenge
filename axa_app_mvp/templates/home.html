@@ -1,86 +1,190 @@
 {% extends "base.html" %}
 
-{% block title %}AXA ADAPT - Home Safety & Emergency Tools{% endblock %}
+{% block title %}AXA ADAPT - Home Safety & Fall Prevention{% endblock %}
 
 {% block extra_css %}
 <style>
+    /* AXA Branded Buttons */
     .decision-button {
-        min-height: 200px;
+        min-height: 240px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         border: none;
-        border-radius: 16px;
+        border-radius: 12px;
         color: white;
-        font-size: 24px;
+        font-size: 1.5rem;
         font-weight: 600;
-        padding: 2rem;
+        padding: 2.5rem 2rem;
         text-align: center;
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
+    
+    .decision-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.1);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
     .decision-button:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         color: white;
         text-decoration: none;
     }
+    
+    .decision-button:hover::before {
+        opacity: 1;
+    }
+    
     .decision-button i {
-        font-size: 48px;
-        margin-bottom: 1rem;
+        font-size: 3.5rem;
+        margin-bottom: 1.25rem;
+        position: relative;
+        z-index: 1;
     }
+    
+    .decision-button .btn-text {
+        position: relative;
+        z-index: 1;
+        margin-bottom: 0.75rem;
+    }
+    
+    .decision-button .btn-subtext {
+        position: relative;
+        z-index: 1;
+        opacity: 0.9;
+        font-size: 1rem;
+        font-weight: 400;
+        max-width: 90%;
+        margin: 0 auto;
+    }
+    
     .btn-qr {
-        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        background: linear-gradient(135deg, var(--color-axa-red), #D40E17);
     }
+    
     .btn-adapt {
-        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        background: linear-gradient(135deg, var(--color-axa-blue), #000F6B);
     }
-    .welcome-text {
-        font-size: 24px;
-        line-height: 1.4;
-        color: #2c3e50;
+    
+    .welcome-section {
+        background: linear-gradient(135deg, #F8F9FF 0%, #FFFFFF 100%);
+        border-radius: 16px;
+        padding: 3rem 2rem;
         margin-bottom: 3rem;
+        border: 1px solid var(--color-border-light);
     }
+    
+    .welcome-title {
+        color: var(--color-axa-blue);
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        font-size: 2.5rem;
+        line-height: 1.2;
+    }
+    
+    .welcome-text {
+        font-size: 1.25rem;
+        line-height: 1.6;
+        color: var(--color-text-secondary);
+        max-width: 800px;
+        margin: 0 auto 2.5rem;
+    }
+    
+    .trust-badge {
+        display: inline-flex;
+        align-items: center;
+        background: white;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--color-axa-blue);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        margin: 0.5rem;
+    }
+    
+    .trust-badge i {
+        margin-right: 0.5rem;
+        color: var(--color-axa-blue);
+    }
+    
     @media (max-width: 768px) {
         .decision-button {
-            min-height: 150px;
-            font-size: 20px;
+            min-height: 200px;
+            font-size: 1.25rem;
+            padding: 1.75rem 1.5rem;
         }
+        
         .decision-button i {
-            font-size: 36px;
+            font-size: 2.75rem;
+        }
+        
+        .welcome-title {
+            font-size: 2rem;
+        }
+        
+        .welcome-text {
+            font-size: 1.1rem;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold mb-4" style="color: #2c3e50;">AXA ADAPT</h1>
-        <p class="welcome-text mx-auto" style="max-width: 700px;">
-            Helping families and older adults stay safe at home with simple, trusted tools for emergency preparedness and fall prevention.
+<div class="container py-4">
+    <div class="welcome-section text-center">
+        <h1 class="welcome-title">Welcome to AXA ADAPT</h1>
+        <p class="welcome-text">
+            Your trusted partner in home safety and fall prevention. Our tools help you create a safer living environment 
+            and ensure your emergency information is always accessible when needed.
         </p>
+        
+        <div class="d-flex flex-wrap justify-content-center mb-4">
+            <span class="trust-badge">
+                <i class="bi bi-shield-lock"></i> Secure & Private
+            </span>
+            <span class="trust-badge">
+                <i class="bi bi-people"></i> Family-Focused
+            </span>
+            <span class="trust-badge">
+                <i class="bi bi-heart-pulse"></i> Health First
+            </span>
+        </div>
     </div>
 
-    <div class="row g-4 justify-content-center">
-        <!-- QR Tool Button -->
-        <div class="col-md-5 mx-3">
-            <a href="{{ url_for('qr_tool_start') }}" class="decision-button btn-qr">
-                <i class="bi bi-qr-code-scan"></i>
-                <div>I want to create a QR code for emergencies</div>
-                <small class="mt-2 d-block" style="opacity: 0.9; font-size: 0.7em;">
-                    Create a secure, privacy-controlled medical ID
+    <div class="row g-4 justify-content-center mb-5">
+        <!-- QR Health Data Generator -->
+        <div class="col-lg-5 col-md-6">
+            <a href="{{ url_for('qr_tool_start') }}" class="decision-button btn-qr" 
+               aria-label="Create Emergency QR Code">
+                <i class="bi bi-qr-code-scan" aria-hidden="true"></i>
+                <div class="btn-text">QR Health Data Generator</div>
+                <small class="btn-subtext">
+                    Create a secure, privacy-controlled emergency profile accessible via QR code
                 </small>
             </a>
         </div>
         
-        <!-- ADAPT Tool Button -->
-        <div class="col-md-5 mx-3">
-            <a href="{{ url_for('adapt_tool_start') }}" class="decision-button btn-adapt">
-                <i class="bi bi-house-heart"></i>
-                <div>I want to scan my home for fall risks</div>
-                <small class="mt-2 d-block" style="opacity: 0.9; font-size: 0.7em;">
-                    Get personalized home safety recommendations
+        <!-- Room Scan Assessment -->
+        <div class="col-lg-5 col-md-6">
+            <a href="{{ url_for('adapt_tool_start') }}" class="decision-button btn-adapt"
+               aria-label="Start Room Scan Assessment">
+                <i class="bi bi-house-heart" aria-hidden="true"></i>
+                <div class="btn-text">Room Scan Assessment</div>
+                <small class="btn-subtext">
+                    Get personalized home safety recommendations with our room-by-room assessment
                 </small>
             </a>
         </div>

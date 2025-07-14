@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}AXA ADAPT - Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard Tabs */
+    .dashboard-tabs {
+        border-bottom: 2px solid #e9ecef;
+        margin-bottom: 2rem;
+    }
+    
+    .dashboard-tabs .nav-link {
+        color: var(--axa-gray);
+        font-weight: 600;
+        font-size: 1.1rem;
+        padding: 1rem 1.5rem;
+        border: none;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s ease;
+        position: relative;
+        margin-right: 0.5rem;
+    }
+    
+    .dashboard-tabs .nav-link.active {
+        color: var(--color-axa-blue);
+        background: transparent;
+        border-color: var(--color-axa-blue);
+    }
+    
+    .dashboard-tabs .nav-link:hover:not(.active) {
+        color: var(--color-axa-blue);
+        background: rgba(0, 102, 204, 0.05);
+    }
+    
+    .dashboard-tab-content {
+        padding: 1.5rem 0;
+    }
+    
+    /* Feature Cards */
+    .feature-card {
+        border: 1px solid var(--axa-border);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 100%;
+        background: white;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-card .card-body {
+        padding: 2rem;
+    }
+    
+    .feature-card .card-icon {
+        font-size: 2.5rem;
+        color: var(--color-axa-blue);
+        margin-bottom: 1.5rem;
+    }
+    
+    .feature-card .card-title {
+        color: var(--color-axa-blue);
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .feature-card .card-text {
+        color: var(--axa-text-light);
+        margin-bottom: 1.5rem;
+    }
+    
+    .feature-card .btn {
+        font-weight: 600;
+        padding: 0.6rem 1.5rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 767.98px) {
+        .dashboard-tabs .nav-link {
+            font-size: 1rem;
+            padding: 0.75rem 1rem;
+        }
+        
+        .feature-card {
+            margin-bottom: 1.5rem;
+        }
+    }
+    
+    /* Welcome Banner */
+    .welcome-banner {
+        background: linear-gradient(135deg, var(--color-axa-blue), #000F6B);
+        color: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .welcome-banner h1 {
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .welcome-banner p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        max-width: 800px;
+    }
+    
+    .welcome-banner .pattern {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        opacity: 0.1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+        <div class="position-relative">
+            <h1>Welcome back, {{ current_user.first_name if current_user.is_authenticated else 'User' }}!</h1>
+            <p>Access all your home safety tools in one place. Scan your home for hazards or manage your emergency health information.</p>
+            <img src="{{ url_for('static', filename='img/pattern.svg') }}" alt="Pattern" class="pattern d-none d-md-block">
+        </div>
+    </div>
+    
+    <!-- Dashboard Tabs -->
+    <ul class="nav dashboard-tabs" id="dashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">
+                <i class="bi bi-house-door me-2"></i>Home Safety
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="health-tab" data-bs-toggle="tab" data-bs-target="#health" type="button" role="tab" aria-controls="health" aria-selected="false">
+                <i class="bi bi-heart-pulse me-2"></i>Health Data
+            </button>
+        </li>
+    </ul>
+    
+    <!-- Tab Content -->
+    <div class="tab-content dashboard-tab-content" id="dashboardTabsContent">
+        <!-- Home Safety Tab -->
+        <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <div class="row">
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="feature-card">
+                        <div class="card-body text-center">
+                            <div class="card-icon">
+                                <i class="bi bi-camera"></i>
+                            </div>
+                            <h3 class="card-title">Room Scan</h3>
+                            <p class="card-text">Scan your rooms to identify potential fall hazards and get personalized safety recommendations.</p>
+                            <a href="{{ url_for('room_scan') }}" class="btn btn-primary">Start Scanning</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="feature-card">
+                        <div class="card-body text-center">
+                            <div class="card-icon">
+                                <i class="bi bi-clipboard2-check"></i>
+                            </div>
+                            <h3 class="card-title">Safety Checklist</h3>
+                            <p class="card-text">Complete our home safety checklist to ensure your living space is fall-proof.</p>
+                            <a href="#" class="btn btn-outline-primary">View Checklist</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="feature-card">
+                        <div class="card-body text-center">
+                            <div class="card-icon">
+                                <i class="bi bi-lightbulb"></i>
+                            </div>
+                            <h3 class="card-title">Safety Tips</h3>
+                            <p class="card-text">Learn how to prevent falls and create a safer home environment.</p>
+                            <a href="#" class="btn btn-outline-primary">View Tips</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Scans Section -->
+            <div class="mt-5">
+                <h3 class="mb-4">Recent Room Scans</h3>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Room</th>
+                                        <th>Date</th>
+                                        <th>Risk Level</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Bathroom</td>
+                                        <td>Today</td>
+                                        <td><span class="badge bg-warning">Medium</span></td>
+                                        <td>Completed</td>
+                                        <td><a href="#" class="btn btn-sm btn-outline-primary">View Report</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Bedroom</td>
+                                        <td>Yesterday</td>
+                                        <td><span class="badge bg-success">Low</span></td>
+                                        <td>Completed</td>
+                                        <td><a href="#" class="btn btn-sm btn-outline-primary">View Report</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Living Room</td>
+                                        <td>2 days ago</td>
+                                        <td><span class="badge bg-danger">High</span></td>
+                                        <td>Completed</td>
+                                        <td><a href="#" class="btn btn-sm btn-outline-primary">View Report</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Health Data Tab -->
+        <div class="tab-pane fade" id="health" role="tabpanel" aria-labelledby="health-tab">
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="feature-card h-100">
+                        <div class="card-body text-center">
+                            <div class="card-icon">
+                                <i class="bi bi-qr-code-scan"></i>
+                            </div>
+                            <h3 class="card-title">QR Health Card</h3>
+                            <p class="card-text">Create and manage your emergency health information card with a scannable QR code for first responders.</p>
+                            <a href="{{ url_for('qr_mode') }}" class="btn btn-primary">Create Health Card</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="feature-card h-100">
+                        <div class="card-body text-center">
+                            <div class="card-icon">
+                                <i class="bi bi-file-medical"></i>
+                            </div>
+                            <h3 class="card-title">Health Profile</h3>
+                            <p class="card-text">View and update your personal health information, medications, and emergency contacts.</p>
+                            <a href="#" class="btn btn-outline-primary">Update Profile</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- QR Status Section -->
+            <div class="mt-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="mb-0">Your QR Health Card</h3>
+                    <div>
+                        <a href="#" class="btn btn-outline-secondary me-2">Print</a>
+                        <a href="#" class="btn btn-outline-secondary me-2">Share</a>
+                        <a href="#" class="btn btn-primary">Regenerate</a>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-4 text-center">
+                                <div class="p-3 border rounded d-inline-block">
+                                    <i class="bi bi-qr-code" style="font-size: 8rem; color: var(--color-axa-blue);"></i>
+                                </div>
+                                <div class="mt-3">
+                                    <p class="text-muted mb-1">Last updated: Just now</p>
+                                    <p class="text-muted mb-0">Expires: 30 days</p>
+                                </div>
+                            </div>
+                            <div class="col-md-8 mt-4 mt-md-0">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <h6>Access Level</h6>
+                                        <p>Basic Emergency Information</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <h6>Status</h6>
+                                        <p><span class="badge bg-success">Active</span></p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <h6>Sharing</h6>
+                                        <p>Not shared</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <h6>Views</h6>
+                                        <p>0 times</p>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            Your QR code contains essential health information for emergencies. Print it and place it in a visible location at home.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Activate the first tab by default
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check URL hash for tab to activate
+        const urlHash = window.location.hash;
+        if (urlHash) {
+            const tabTrigger = new bootstrap.Tab(document.querySelector(`[data-bs-target="${urlHash}"]`));
+            tabTrigger.show();
+        }
+        
+        // Update URL hash when tab changes
+        const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        tabEls.forEach(tabEl => {
+            tabEl.addEventListener('shown.bs.tab', function (event) {
+                const target = event.target.getAttribute('data-bs-target');
+                if (target) {
+                    window.location.hash = target;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,27 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Required meta tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#0066CC">
-    <meta name="description" content="AXA ADAPT - Helping families and older adults stay safe at home">
+    
+    <!-- Primary Meta Tags -->
+    <title>{% block title %}AXA ADAPT - Home Safety & Fall Prevention{% endblock %}</title>
+    <meta name="title" content="AXA ADAPT - Home Safety & Fall Prevention">
+    <meta name="description" content="Helping families and older adults stay safe at home with AXA's trusted fall prevention and emergency tools.">
+    <meta name="keywords" content="AXA, fall prevention, home safety, elderly care, emergency QR, health data">
+    
+    <!-- Theme Color for Mobile Browsers -->
+    <meta name="theme-color" content="#001689">
+    
+    <!-- Apple Mobile Web App Capabilities -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>{% block title %}AXA ADAPT{% endblock %}</title>
+    <meta name="apple-mobile-web-app-title" content="AXA ADAPT">
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
     
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     
-    <!-- Google Fonts - Inter -->
+    <!-- Preconnect to external resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Main CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Load Helvetica Neue if available, with system font fallbacks -->
+    <style>
+        @font-face {
+            font-family: 'Helvetica Neue';
+            src: local('Helvetica Neue'),
+                 local('HelveticaNeue'),
+                 url('{{ url_for("static", filename="fonts/HelveticaNeue.woff2") }}') format('woff2'),
+                 url('{{ url_for("static", filename="fonts/HelveticaNeue.woff") }}') format('woff');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Helvetica Neue';
+            src: local('Helvetica Neue Bold'),
+                 local('HelveticaNeue-Bold'),
+                 url('{{ url_for("static", filename="fonts/HelveticaNeue-Bold.woff2") }}') format('woff2'),
+                 url('{{ url_for("static", filename="fonts/HelveticaNeue-Bold.woff") }}') format('woff');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+    
+    <!-- AXA Theme CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='axa_theme/css/axa-theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='axa_theme/css/main.css') }}">
     
     <!-- Page-specific CSS -->
     {% block extra_css %}{% endblock %}
@@ -33,25 +70,8 @@
     <link rel="manifest" href="/static/manifest.json">
     <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
     <link rel="icon" type="image/png" href="/static/icons/icon-192x192.png">
+    <!-- Theme variables are now in axa-theme.css -->
     <style>
-        :root {
-            --axa-blue: #0066CC;
-            --axa-dark-blue: #003366;
-            --axa-light-blue: #0099FF;
-            --axa-bg: #F5F9FF;
-            --axa-card-bg: #FFFFFF;
-            --axa-text: #1A1A1A;
-            --axa-text-light: #5F6A72;
-            --axa-border: #E0E3E7;
-            --axa-success: #00A651;
-            --axa-warning: #FFB81C;
-            --axa-error: #E60028;
-            --axa-gray: #5F6A72;
-            --axa-light-gray: #E0E3E7;
-            --axa-shadow-sm: 0 2px 8px rgba(0, 51, 102, 0.08);
-            --axa-shadow-md: 0 4px 12px rgba(0, 51, 102, 0.12);
-            --axa-transition: all 0.2s ease;
-        }
         
         body {
             background: var(--axa-bg);
@@ -291,38 +311,80 @@
     </style>
 </head>
 <body>
+    <!-- Skip to main content link (hidden until focused) -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
     <header class="axa-header">
         <div class="container">
             <div class="axa-header-container">
-                <a href="{{ url_for('index') }}" class="axa-logo">
+                <a href="{{ url_for('dashboard') }}" class="axa-logo">
                     <img src="{{ url_for('static', filename='img/axa-logo.svg') }}" alt="AXA" width="40" height="40" class="axa-logo-img">
                     <span class="axa-logo-text">ADAPT</span>
                 </a>
                 
-                <button class="axa-mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation" aria-expanded="false">
-                    <span class="menu-icon"></span>
+                <button 
+                    class="axa-mobile-menu-btn" 
+                    id="mobileMenuBtn" 
+                    aria-label="Toggle navigation menu" 
+                    aria-expanded="false"
+                    aria-controls="mainNav"
+                    aria-haspopup="true"
+                >
+                    <span class="menu-icon">
+                        <span class="sr-only">Menu</span>
+                    </span>
                 </button>
                 
-                <nav class="axa-nav" id="mainNav">
-                    <ul class="axa-nav-list">
-                        <li class="axa-nav-item">
-                            <a href="{{ url_for('index') }}" class="axa-nav-link {% if request.path == url_for('index') %}active{% endif %}">
-                                <i class="bi bi-house-door"></i> Home
+                <nav class="axa-nav" id="mainNav" aria-label="Main navigation">
+                    <ul class="axa-nav-list" role="menubar">
+                        <li class="axa-nav-item" role="none">
+                            <a 
+                                href="{{ url_for('dashboard') }}" 
+                                class="axa-nav-link {% if request.path == url_for('dashboard') %}active{% endif %}"
+                                role="menuitem"
+                                tabindex="0"
+                                {% if request.path == url_for('dashboard') %}aria-current="page"{% endif %}
+                            >
+                                <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                                <span>Dashboard</span>
                             </a>
                         </li>
-                        <li class="axa-nav-item">
-                            <a href="{{ url_for('qr_tool_start') }}" class="axa-nav-link {% if request.path.startswith('/qr-tool') %}active{% endif %}">
-                                <i class="bi bi-qr-code"></i> QR Tool
+                        <li class="axa-nav-item" role="none">
+                            <a 
+                                href="{{ url_for('room_scan_mode') }}" 
+                                class="axa-nav-link {% if request.path.startswith('/room-scan') %}active{% endif %}"
+                                role="menuitem"
+                                tabindex="0"
+                                {% if request.path.startswith('/room-scan') %}aria-current="page"{% endif %}
+                            >
+                                <i class="bi bi-house-check" aria-hidden="true"></i>
+                                <span>Room Scan</span>
                             </a>
                         </li>
-                        <li class="axa-nav-item">
-                            <a href="{{ url_for('adapt_tool_start') }}" class="axa-nav-link {% if request.path.startswith('/adapt-tool') %}active{% endif %}">
-                                <i class="bi bi-shield-check"></i> ADAPT Tool
+                        <li class="axa-nav-item" role="none">
+                            <a 
+                                href="{{ url_for('qr_mode') }}" 
+                                class="axa-nav-link {% if request.path.startswith('/qr-mode') or request.path.startswith('/qr-tool') %}active{% endif %}"
+                                role="menuitem"
+                                tabindex="0"
+                                {% if request.path.startswith('/qr-mode') or request.path.startswith('/qr-tool') %}aria-current="page"{% endif %}
+                            >
+                                <i class="bi bi-qr-code" aria-hidden="true"></i>
+                                <span>QR Health Data</span>
                             </a>
                         </li>
-                        <li class="axa-nav-item">
-                            <a href="#" class="axa-nav-link">
-                                <i class="bi bi-person-circle"></i> Profile
+                        <li class="axa-nav-item" role="none">
+                            <a 
+                                href="#" 
+                                class="axa-nav-link"
+                                role="menuitem"
+                                tabindex="0"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                            >
+                                <i class="bi bi-person-circle" aria-hidden="true"></i>
+                                <span>Profile</span>
+                                <span class="sr-only">(Opens user profile menu)</span>
                             </a>
                         </li>
                     </ul>
@@ -330,7 +392,7 @@
             </div>
         </div>
     </header>
-    <main class="axa-main">
+    <main id="main-content" class="axa-main" tabindex="-1">
         <div class="container">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}

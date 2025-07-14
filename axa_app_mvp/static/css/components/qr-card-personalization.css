@@ -1,0 +1,183 @@
+/* QR Card Personalization Styles */
+
+/* Card Selection */
+.card-option {
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-option:hover {
+    border-color: var(--color-axa-blue);
+    box-shadow: 0 4px 12px rgba(0, 22, 137, 0.1);
+}
+
+.card-option.active {
+    border-color: var(--color-axa-blue);
+    background-color: rgba(0, 22, 137, 0.03);
+}
+
+.card-option .card-img-top {
+    height: 180px;
+    object-fit: contain;
+    margin-bottom: 1rem;
+}
+
+/* Photo Upload */
+.photo-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+
+.photo-upload-area:hover, .photo-upload-area.drag-over {
+    border-color: var(--color-axa-blue);
+    background-color: rgba(0, 22, 137, 0.03);
+}
+
+.photo-upload-area i {
+    font-size: 2.5rem;
+    color: var(--color-axa-blue);
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.photo-preview {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 8px;
+    margin: 1rem 0;
+    display: none;
+}
+
+/* Access Level Cards */
+.access-level-card {
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    height: 100%;
+    position: relative;
+}
+
+.access-level-card:hover {
+    border-color: var(--color-axa-blue);
+    box-shadow: 0 4px 12px rgba(0, 22, 137, 0.1);
+}
+
+.access-level-card.active {
+    border-color: var(--color-axa-blue);
+    background-color: rgba(0, 22, 137, 0.03);
+}
+
+.access-level-card .form-check-input {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Expiry Settings */
+.expiry-options .form-check {
+    margin-bottom: 1rem;
+}
+
+.expiry-options .form-check-label {
+    display: block;
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.expiry-options .form-check-input:checked + .form-check-label {
+    border-color: var(--color-axa-blue);
+    background-color: rgba(0, 22, 137, 0.05);
+}
+
+.expiry-options .form-check-input {
+    margin-top: 0.3rem;
+}
+
+/* QR Preview */
+.qr-preview-container {
+    max-width: 400px;
+    margin: 0 auto 2rem;
+    text-align: center;
+}
+
+.qr-preview {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    margin: 0 auto 1.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    background: white;
+}
+
+.download-options {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767.98px) {
+    .card-option {
+        margin-bottom: 1.5rem;
+    }
+    
+    .access-level-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .download-options .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* GDPR Compliance Notice */
+.gdpr-notice {
+    background-color: #f8f9fa;
+    border-left: 4px solid var(--color-axa-blue);
+    padding: 1rem;
+    margin: 1.5rem 0;
+    border-radius: 4px;
+}
+
+.gdpr-notice h6 {
+    color: var(--color-axa-blue);
+    margin-bottom: 0.5rem;
+}
+
+/* Form Group with Icons */
+.form-group-icon {
+    position: relative;
+}
+
+.form-group-icon .form-control {
+    padding-left: 2.5rem;
+}
+
+.form-group-icon i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+}

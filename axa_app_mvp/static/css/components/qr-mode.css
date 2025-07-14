@@ -1,0 +1,208 @@
+/* QR Mode Component Styles */
+
+/* Steps */
+.steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin: 2rem 0 3rem;
+}
+
+.steps::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #e9ecef;
+    z-index: 1;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    flex: 1;
+}
+
+.step:not(:last-child) {
+    margin-right: 1rem;
+}
+
+.step.active .step-number {
+    background-color: var(--color-axa-blue);
+    color: white;
+    border-color: var(--color-axa-blue);
+}
+
+.step.active .step-label {
+    color: var(--color-axa-blue);
+    font-weight: 600;
+}
+
+.step.completed .step-number {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.step.completed .step-label {
+    color: #28a745;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    border: 2px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.step-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+/* Form Styles */
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--color-axa-blue);
+    box-shadow: 0 0 0 0.25rem rgba(0, 22, 137, 0.1);
+}
+
+/* Card Styles */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.25rem 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Button Styles */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--color-axa-blue);
+    border-color: var(--color-axa-blue);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: #00115a;
+    border-color: #00115a;
+}
+
+.btn-outline-primary {
+    color: var(--color-axa-blue);
+    border-color: var(--color-axa-blue);
+}
+
+.btn-outline-primary:hover, .btn-outline-primary:focus {
+    background-color: rgba(0, 22, 137, 0.1);
+    color: var(--color-axa-blue);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767.98px) {
+    .steps {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        margin: 1rem 0 2rem;
+    }
+    
+    .step {
+        width: 50%;
+        margin-bottom: 1.5rem;
+    }
+    
+    .step:not(:last-child) {
+        margin-right: 0;
+    }
+    
+    .steps::before {
+        display: none;
+    }
+    
+    .card-body {
+        padding: 1.25rem;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .d-flex {
+        flex-direction: column;
+    }
+    
+    .ms-2, .me-2 {
+        margin: 0.25rem 0 !important;
+    }
+}
+
+/* Accessibility Focus Styles */
+:focus-visible {
+    outline: 3px solid var(--color-axa-red);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Print Styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    body {
+        padding: 0;
+        background: white;
+    }
+    
+    .container {
+        max-width: 100%;
+        padding: 0;
+    }
+    
+    .card, .card-body {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}

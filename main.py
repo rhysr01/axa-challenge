@@ -23,7 +23,7 @@ from typing import Dict, List, Optional, Union
 
 import cv2
 import numpy as np
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Depends, Query
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Depends, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -31,12 +31,15 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from ultralytics import YOLO
 from apscheduler.schedulers.background import BackgroundScheduler
+import shutil
+import uuid
+from pathlib import Path
+from datetime import datetime
+from typing import List, Dict, Optional
 
 # Import improved core logic
 from axa_app_mvp.logic.hazard_scoring import (
-    load_risk_matrix,
-    load_thresholds,
-    load_detection_mapping,
+    HazardConfig,
     map_detected_objects_to_hazards,
     score_hazards
 )
@@ -150,9 +153,32 @@ def load_user_profile(user_id: str) -> Dict:
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     """
-    Serve the home page.
+    Redirect to the dashboard.
     """
-    return templates.TemplateResponse("home.html", {"request": request})
+    return RedirectResponse(url="/dashboard")
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    """
+    Serve the main dashboard with tabs for Room Scan and QR Health Data.
+    """
+    # In a real app, you would fetch user data here
+    user_data = {
+        "first_name": "John",
+        "last_name": "Doe",
+        "last_login": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "qr_status": "active",
+        "last_scan": (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
+    }
+    
+    return templates.TemplateResponse(
+        "dashboard.html", 
+        {
+            "request": request, 
+            "title": "AXA ADAPT - Dashboard",
+            "current_user": user_data
+        }
+    )
 
 @app.get("/assess", response_class=HTMLResponse)
 async def start_assessment(request: Request):
@@ -785,68 +811,445 @@ def qr_basic_view(user_id: str, request: Request):
 def qr_deep_view(user_id: str, request: Request, token: str = Query(None)):
     """
     Full caregiver QR view: requires valid token as query param, shows all consented blocks.
+    Includes fall risk assessment report with detailed hazard information.
     """
-    meta_path = f"outputs/qr_token_{token}.json"
+    # Use OUTPUT_DIR from config or default to 'outputs' for backward compatibility
+    output_dir = getattr(app.state, 'OUTPUT_DIR', 'outputs')
+    meta_path = os.path.join(output_dir, f"qr_token_{token}.json")
     outcome = "success"
+    
+    # Debug logging
+    print(f"[DEBUG] qr_deep_view - user_id: {user_id}, token: {token}")
+    print(f"[DEBUG] Looking for token file at: {meta_path}")
+    print(f"[DEBUG] Current working directory: {os.getcwd()}")
+    print(f"[DEBUG] Output directory exists: {os.path.exists(output_dir)}")
+    print(f"[DEBUG] Token file exists: {os.path.exists(meta_path)}")
+    
+    # Default error response
     if not token or not os.path.exists(meta_path):
+        print(f"[ERROR] Token validation failed - Token: {token}, File exists: {os.path.exists(meta_path) if token else 'No token provided'}")
         outcome = "invalid_or_expired"
-        html = "<h2>QR code not found or expired.</h2>"
-    else:
+        return HTMLResponse("""
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>QR Code Expired - AXA ADAPT</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; }
+                    .risk-high { background-color: #f8d7da; }
+                    .risk-medium { background-color: #fff3cd; }
+                    .risk-low { background-color: #d4edda; }
+                    .hazard-card { transition: transform 0.2s; }
+                    .hazard-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+                    .risk-meter { height: 1.5rem; border-radius: 0.25rem; }
+                </style>
+            </head>
+            <body class="bg-light">
+                <div class="container py-5">
+                    <div class="alert alert-danger">
+                        <h2 class="alert-heading">QR Code Not Found or Expired</h2>
+                        <p>This QR code is no longer valid. Please request a new one from the patient or their caregiver.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        """)
+    
+    try:
         with open(meta_path) as f:
             meta = json.load(f)
+            
         # Check expiry/revocation
-        expires = meta.get("expires")
-        if expires and datetime.fromisoformat(expires.replace("Z","")) < datetime.utcnow():
-            outcome = "expired"
-            html = "<h2>This QR code has expired.</h2>"
-        elif meta.get("revoked", False):
+        expires = meta.get("expiry") or meta.get("expires")  # Support both field names
+        if expires:
+            if isinstance(expires, str):
+                expires = datetime.fromisoformat(expires.replace("Z", ""))
+            if expires < datetime.utcnow():
+                outcome = "expired"
+                raise TokenExpiredError("QR code has expired")
+                
+        if meta.get("revoked", False):
             outcome = "revoked"
-            html = "<h2>This QR code has been revoked.</h2>"
-        else:
-            consent = meta.get("consent", {})
-            # Load user profile
-            profile_path = f"axa_app_mvp/profiles/health_profile_{user_id.split('_')[-1]}.json"
-            if not os.path.exists(profile_path):
-                profile_path = f"axa_app_mvp/profiles/health_profile_maria.json"
-            with open(profile_path) as f:
-                profile = json.load(f)
-            # Load risk report if available
-            risk_report_path = f"axa_app_mvp/outputs/risk_report_{user_id}.json"
-            risk_score = None
-            hazards = None
-            recommendation = None
+            raise TokenValidationError("QR code has been revoked")
+            
+        # Load user profile
+        profile_path = f"axa_app_mvp/profiles/health_profile_{user_id.split('_')[-1]}.json"
+        if not os.path.exists(profile_path):
+            profile_path = "axa_app_mvp/profiles/health_profile_maria.json"
+            
+        with open(profile_path) as f:
+            profile = json.load(f)
+            
+        # Load risk report from token or fall back to file
+        risk_report = meta.get("risk_report")
+        
+        # Debug: Print the risk report from token
+        print(f"[DEBUG] Risk report from token: {json.dumps(risk_report, indent=2) if risk_report else 'None'}")
+        
+        # If no risk report in token, try to load from file
+        if not risk_report:
+            # Try with the full user_id first
+            risk_report_path = os.path.join("axa_app_mvp/outputs", f"risk_report_{user_id}.json")
+            print(f"[DEBUG] Trying to load risk report from: {risk_report_path}")
+            
+            if not os.path.exists(risk_report_path):
+                # Try with just the numeric part of the user_id
+                user_id_num = user_id.split('_')[-1]
+                risk_report_path = os.path.join("axa_app_mvp/outputs", f"risk_report_{user_id_num}.json")
+                print(f"[DEBUG] Trying alternative risk report path: {risk_report_path}")
+            
             if os.path.exists(risk_report_path):
                 with open(risk_report_path) as rf:
-                    report = json.load(rf)
-                    risk_score = report.get("score")
-                    hazards = report.get("hazards")
-                    recommendation = report.get("recommendation")
-            else:
-                risk_score = 72
-                hazards = []
-                recommendation = None
-            blocks = []
-            if consent.get("name"):
-                blocks.append(f"<b>Name:</b> {profile['personal_info']['name']}")
-            if consent.get("risk_score"):
-                blocks.append(f"<b>Fall Risk Score:</b> {risk_score}")
-            if consent.get("hazards") and hazards:
-                hazards_html = "<ul>" + "".join([f"<li>{h['object'].title()} in {h['location']} ({h['reason']})</li>" for h in hazards]) + "</ul>"
-                blocks.append(f"<b>Recent Hazards:</b> {hazards_html}")
-            if consent.get("conditions"):
-                blocks.append(f"<b>Conditions:</b> Vision: {profile['health_conditions']['vision']['notes']}, Mobility: {profile['health_conditions']['mobility']['notes']}")
-            if consent.get("emergency_contact"):
-                ec = profile['emergency_contacts'][0]
-                blocks.append(f"<b>Emergency Contact:</b> {ec['name']} ({ec['relationship']}), {ec['phone']}")
-            if consent.get("care_directives"):
-                blocks.append(f"<b>Care Directives:</b> None provided")  # Stub
-            if recommendation and (consent.get("risk_score") or consent.get("hazards")):
-                blocks.append(f"<b>Recommendation:</b> {recommendation}")
-            html = """
-            <html><head><title>AXA Caregiver QR</title></head><body>
-            <h2>AXA Caregiver QR</h2>
-            <div style='font-size:1.2em;'>
-            """ + "<br>".join(blocks) + "</div></body></html>"
+                    risk_report = json.load(rf)
+                print(f"[DEBUG] Loaded risk report from file: {json.dumps(risk_report, indent=2)}")
+        
+        # Default values if no risk report is found
+        if not risk_report:
+            risk_report = {
+                "score": 0,
+                "risk_level": "Not assessed",
+                "hazards": [],
+                "recommendation": "No recent fall risk assessment available.",
+                "generated_at": datetime.utcnow().isoformat()
+            }
+            print("[DEBUG] Using default risk report")
+        
+        # Ensure hazards is always a list
+        if "hazards" not in risk_report:
+            risk_report["hazards"] = []
+            print("[DEBUG] Initialized empty hazards list in risk report")
+            
+        # Determine risk level and color
+        risk_score = risk_report.get("score", 0)
+        if risk_score >= 70:
+            risk_level = "High"
+            risk_class = "high"
+            risk_color = "#dc3545"
+        elif risk_score >= 30:
+            risk_level = "Medium"
+            risk_class = "medium"
+            risk_color = "#ffc107"
+        else:
+            risk_level = "Low"
+            risk_class = "low"
+            risk_color = "#28a745"
+            
+        # Get consent settings (default to showing all if not specified)
+        consent = meta.get("consent", {
+            "name": True,
+            "risk_score": True,
+            "hazards": True,
+            "conditions": True,
+            "emergency_contact": True,
+            "care_directives": True
+        })
+        
+        # Generate HTML with proper styling and structure
+        html = f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>AXA ADAPT - Health Profile</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+            <style>
+                body {{ 
+                    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+                    line-height: 1.6;
+                    color: #212529;
+                    background-color: #f8f9fa;
+                }}
+                .header {{ 
+                    background-color: #001689; 
+                    color: white;
+                    padding: 1.5rem 0;
+                    margin-bottom: 2rem;
+                }}
+                .card {{ 
+                    border: none;
+                    border-radius: 0.75rem;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+                    margin-bottom: 1.5rem;
+                    overflow: hidden;
+                }}
+                .card-header {{
+                    background-color: #f8f9fa;
+                    border-bottom: 1px solid rgba(0,0,0,.125);
+                    font-weight: 600;
+                    padding: 1rem 1.25rem;
+                }}
+                .risk-high {{ 
+                    background-color: #f8d7da; 
+                    color: #721c24;
+                }}
+                .risk-medium {{ 
+                    background-color: #fff3cd; 
+                    color: #856404;
+                }}
+                .risk-low {{ 
+                    background-color: #d4edda; 
+                    color: #155724;
+                }}
+                .risk-{risk_class} {{
+                    background-color: {risk_color}15;
+                    border-left: 4px solid {risk_color};
+                }}
+                .hazard-card {{ 
+                    transition: transform 0.2s, box-shadow 0.2s;
+                    margin-bottom: 0.75rem;
+                    border-left: 4px solid #6c757d;
+                }}
+                .hazard-card:hover {{ 
+                    transform: translateY(-2px); 
+                    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+                }}
+                .risk-meter {{ 
+                    height: 1.5rem; 
+                    border-radius: 0.75rem;
+                    overflow: hidden;
+                    background-color: #e9ecef;
+                }}
+                .risk-meter-fill {{
+                    height: 100%;
+                    background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+                    width: {risk_score}%;
+                    transition: width 1s ease-in-out;
+                }}
+                .risk-marker {{
+                    position: absolute;
+                    left: {risk_score}%;
+                    transform: translateX(-50%);
+                    top: 100%;
+                    margin-top: 0.5rem;
+                    font-size: 0.875rem;
+                    white-space: nowrap;
+                }}
+                .hazard-icon {{
+                    font-size: 1.5rem;
+                    margin-right: 0.75rem;
+                    color: #6c757d;
+                }}
+                .recommendation-card {{
+                    border-left: 4px solid #007bff;
+                }}
+                @media (max-width: 768px) {{
+                    .container {{ padding: 0 15px; }}
+                    .card-body {{ padding: 1.25rem; }}
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="container">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-0">AXA ADAPT</h1>
+                            <p class="mb-0 opacity-75">Fall Risk Assessment Report</p>
+                        </div>
+                        <div class="text-end">
+                            <p class="mb-0 small">Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}</p>
+                            <p class="mb-0 small">ID: {user_id}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="container">
+                <!-- Patient Summary Card -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-person-circle me-2"></i>Patient Information</span>
+                        <span class="badge bg-primary">Active</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Name:</strong> {profile.get('personal_info', {}).get('name', 'N/A')}</p>
+                                <p class="mb-2"><strong>Date of Birth:</strong> {profile.get('personal_info', {}).get('dob', 'N/A')}</p>
+                                <p class="mb-0"><strong>Age:</strong> {profile.get('personal_info', {}).get('age', 'N/A')} years</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Blood Type:</strong> {profile.get('medical_info', {}).get('blood_type', 'N/A')}</p>
+                                <p class="mb-2"><strong>Allergies:</strong> {', '.join(profile.get('medical_info', {}).get('allergies', ['None']))}</p>
+                                <p class="mb-0"><strong>Conditions:</strong> {', '.join(profile.get('medical_info', {}).get('conditions', ['None']))}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Risk Assessment Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>Fall Risk Assessment
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-{risk_class} d-flex align-items-center" role="alert">
+                            <i class="bi bi-{ 'exclamation-triangle-fill' if risk_class == 'high' else 'info-circle-fill' } me-3" style="font-size: 2rem;"></i>
+                            <div>
+                                <h4 class="alert-heading">{risk_level} Fall Risk</h4>
+                                <p class="mb-0">
+                                    Overall Risk Score: <strong>{risk_score}/100</strong><br>
+                                    <small class="text-muted">Last assessed: {datetime.fromisoformat(risk_report.get('generated_at', datetime.utcnow().isoformat())).strftime('%Y-%m-%d %H:%M')}</small>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="risk-meter mb-3 position-relative">
+                            <div class="risk-meter-fill"></div>
+                            <div class="risk-marker">
+                                <i class="bi bi-caret-down-fill d-block text-center" style="color: {risk_color};"></i>
+                                {risk_score}%
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="text-success">Low</span>
+                            <span class="text-warning">Medium</span>
+                            <span class="text-danger">High</span>
+                        </div>
+                        
+                        <!-- Hazard Details -->
+                        <h5 class="mb-3">Identified Hazards</h5>
+                        """
+        
+        # Add hazard cards if hazards exist
+        hazards = risk_report.get("hazards", [])
+        if hazards:
+            for hazard in hazards:
+                icon_map = {
+                    "slippery": "droplet",
+                    "clutter": "box-seam",
+                    "lighting": "lightbulb",
+                    "stairs": "stairs",
+                    "rug": "grid-1x2",
+                    "furniture": "box",
+                    "electrical": "plug"
+                }
+                icon = icon_map.get(hazard.get("type", "").lower(), "exclamation-triangle")
+                
+                html += f"""
+                <div class="card hazard-card mb-2">
+                    <div class="card-body py-2">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-{icon} hazard-icon"></i>
+                            <div>
+                                <h6 class="mb-1">{hazard.get('object', 'Hazard').title()}</h6>
+                                <p class="mb-0 small text-muted">
+                                    <i class="bi bi-geo-alt"></i> {hazard.get('location', 'Unknown location')} • 
+                                    <i class="bi bi-info-circle"></i> {hazard.get('reason', 'Potential fall risk')}
+                                </p>
+                            </div>
+                            <span class="badge bg-{risk_class} ms-auto">{hazard.get('severity', 'medium').title()}</span>
+                        </div>
+                    </div>
+                </div>
+                """
+        else:
+            html += """
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle-fill me-2"></i>No specific hazards were identified in the most recent assessment.
+            </div>
+            """
+            
+        # Add recommendations section
+        recommendation = risk_report.get("recommendation", "No specific recommendations available.")
+        html += f"""
+                        
+                        <div class="card recommendation-card mt-4">
+                            <div class="card-header bg-light">
+                                <i class="bi bi-lightbulb me-2"></i>Recommendations
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-0">{recommendation}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Emergency Contact -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-telephone-fill me-2"></i>Emergency Contact
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                                <i class="bi bi-person-fill text-primary" style="font-size: 1.5rem;"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">{profile.get('emergency_contacts', [{}])[0].get('name', 'Not specified')}</h5>
+                                <p class="mb-1">{profile.get('emergency_contacts', [{}])[0].get('relationship', 'Emergency Contact')}</p>
+                                <p class="mb-0"><i class="bi bi-telephone"></i> {profile.get('emergency_contacts', [{}])[0].get('phone', 'Not specified')}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <footer class="text-center text-muted mt-4 mb-5">
+                    <hr>
+                    <p class="small">
+                        This report was generated by AXA ADAPT on {datetime.now().strftime('%B %d, %Y')}. 
+                        For more information, please contact your healthcare provider.
+                    </p>
+                    <p class="small text-muted">
+                        <i class="bi bi-shield-lock"></i> This information is confidential and intended only for authorized healthcare providers.
+                    </p>
+                </footer>
+            </div>
+            
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        </body>
+        </html>
+        """
+        
+    except (TokenExpiredError, TokenValidationError) as e:
+        html = f"""
+        <div class="container py-5">
+            <div class="alert alert-danger">
+                <h2 class="alert-heading">Access Denied</h2>
+                <p>{str(e)}</p>
+                <hr>
+                <p class="mb-0">Please request a new QR code from the patient or their caregiver.</p>
+            </div>
+        </div>
+        """
+    except Exception as e:
+        logger.error(f"Error generating QR view: {str(e)}", exc_info=True)
+        outcome = "error"
+        html = """
+        <div class="container py-5">
+            <div class="alert alert-danger">
+                <h2 class="alert-heading">Error Loading Health Data</h2>
+                <p>An unexpected error occurred while processing this request.</p>
+                <hr>
+                <p class="mb-0">Please try again later or contact support if the problem persists.</p>
+            </div>
+        </div>
+        """
+    
+    # Log access
+    log_entry = {
+        "event": "qr_deep_scan",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "user_id": user_id,
+        "token": token,
+        "ip": request.client.host if request and request.client else None,
+        "outcome": outcome
+    }
+    
+    try:
+        log_file = "outputs/qr_access_log.csv"
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        with open(log_file, "a") as logf:
+            logf.write(json.dumps(log_entry) + "\n")
+    except Exception as e:
+        logger.error(f"Failed to log QR access: {str(e)}")
+    
+    return HTMLResponse(html)
     # Log access
     log_entry = {
         "event": "qr_deep_scan",
@@ -1000,17 +1403,222 @@ def generate_qr_code_url(qr_data: Dict[str, Any], base_url: str = "https://axa-a
 
 from fastapi import Request, Form, Depends
 from axa_app_mvp.logic.hazard_scoring import (
-    load_risk_matrix, load_thresholds, load_detection_mapping,
-    map_detected_objects_to_hazards, score_hazards
+    HazardConfig, map_detected_objects_to_hazards, score_hazards
 )
 
 # ADAPT Tool Routes
-@app.get("/adapt-tool/start", response_class=HTMLResponse)
+@app.get("/room-scan")
+async def room_scan_mode(request: Request):
+    """
+    Serve the Room Scan Mode interface.
+    """
+    return templates.TemplateResponse("room_scan.html", {
+        "request": request,
+        "current_time": datetime.now()
+    })
+
+@app.get("/qr-mode")
+async def qr_mode(request: Request):
+    """
+    Serve the QR Health Data Mode interface.
+    """
+    return templates.TemplateResponse("qr_mode.html", {
+        "request": request,
+        "current_time": datetime.now()
+    })
+
+@app.get("/room-scan/results")
+async def room_scan_results(request: Request):
+    """
+    Serve the Room Scan results page with a sample response.
+    In a real app, this would be populated with actual analysis results.
+    """
+    # Sample data - replace with actual analysis results
+    sample_data = {
+        "overall_score": 65,
+        "overall_risk": "Medium",
+        "current_time": datetime.now(),
+        "rooms": [
+            {
+                "name": "Bathroom",
+                "score": 75,
+                "risk": "High",
+                "icon": "bi-droplet",
+                "hazards": [
+                    {
+                        "name": "Slippery Floor",
+                        "description": "Wet bathroom floor increases fall risk",
+                        "severity": "High",
+                        "recommendation": "Install non-slip mats or adhesive strips in the bathtub/shower and on the bathroom floor.",
+                        "benefit": "Reduces slip and fall risk by up to 60%.",
+                        "images": ["/static/img/hazards/wet-floor.jpg"]
+                    },
+                    {
+                        "name": "No Grab Bars",
+                        "description": "Missing grab bars near toilet and shower",
+                        "severity": "Medium",
+                        "recommendation": "Install grab bars near the toilet and in the shower/tub area.",
+                        "benefit": "Provides support when standing, sitting, or moving in the bathroom.",
+                        "images": ["/static/img/hazards/no-grab-bars.jpg"]
+                    }
+                ]
+            },
+            {
+                "name": "Bedroom",
+                "score": 40,
+                "risk": "Medium",
+                "icon": "bi-house-door",
+                "hazards": [
+                    {
+                        "name": "Cluttered Floor",
+                        "description": "Items on the floor create tripping hazards",
+                        "severity": "Medium",
+                        "recommendation": "Keep the floor clear of clutter, especially along walking paths.",
+                        "benefit": "Reduces tripping hazards and improves mobility.",
+                        "images": ["/static/img/hazards/cluttered-floor.jpg"]
+                    }
+                ]
+            },
+            {
+                "name": "Living Room",
+                "score": 30,
+                "risk": "Low",
+                "icon": "bi-tv",
+                "hazards": [
+                    {
+                        "name": "Loose Rugs",
+                        "description": "Area rugs without non-slip backing",
+                        "severity": "Medium",
+                        "recommendation": "Secure rugs with non-slip pads or double-sided tape, or remove them.",
+                        "benefit": "Prevents rugs from sliding and reduces tripping hazards.",
+                        "images": ["/static/img/hazards/loose-rug.jpg"]
+                    }
+                ]
+            },
+            {
+                "name": "Hallway",
+                "score": 20,
+                "risk": "Low",
+                "icon": "bi-arrow-left-right",
+                "hazards": [
+                    {
+                        "name": "Inadequate Lighting",
+                        "description": "Poorly lit hallway",
+                        "severity": "Low",
+                        "recommendation": "Install night lights or motion-activated lighting.",
+                        "benefit": "Improves visibility and reduces fall risk during nighttime.",
+                        "images": ["/static/img/hazards/dark-hallway.jpg"]
+                    }
+                ]
+            },
+            {
+                "name": "Stairs",
+                "score": 80,
+                "risk": "High",
+                "icon": "bi-stairs",
+                "hazards": [
+                    {
+                        "name": "Missing Handrail",
+                        "description": "No handrail on one side of the stairs",
+                        "severity": "High",
+                        "recommendation": "Install a sturdy handrail on at least one side of the stairs.",
+                        "benefit": "Provides support and balance when using the stairs.",
+                        "images": ["/static/img/hazards/missing-handrail.jpg"]
+                    },
+                    {
+                        "name": "Uneven Steps",
+                        "description": "Steps are of uneven height",
+                        "severity": "High",
+                        "recommendation": "Consider professional assessment and repair of the stairs.",
+                        "benefit": "Reduces tripping hazards and improves safety.",
+                        "images": ["/static/img/hazards/uneven-steps.jpg"]
+                    }
+                ]
+            }
+        ],
+        "recommendations": [
+            {
+                "priority": "High",
+                "description": "Install grab bars in the bathroom near the toilet and in the shower/tub area.",
+                "room": "Bathroom",
+                "cost": "$50-100",
+                "time": "1-2 hours"
+            },
+            {
+                "priority": "High",
+                "description": "Install a sturdy handrail on the stairs.",
+                "room": "Stairs",
+                "cost": "$100-300",
+                "time": "2-4 hours"
+            },
+            {
+                "priority": "Medium",
+                "description": "Secure or remove loose rugs in the living room.",
+                "room": "Living Room",
+                "cost": "$10-30",
+                "time": "30 minutes"
+            },
+            {
+                "priority": "Medium",
+                "description": "Clear clutter from the bedroom floor.",
+                "room": "Bedroom",
+                "cost": "$0",
+                "time": "1 hour"
+            },
+            {
+                "priority": "Low",
+                "description": "Improve hallway lighting with night lights.",
+                "room": "Hallway",
+                "cost": "$10-20",
+                "time": "15 minutes"
+            }
+        ]
+    }
+    
+    return templates.TemplateResponse("room_scan_results.html", {
+        "request": request,
+        **sample_data
+    })
+
+@app.post("/api/room-scan/upload")
+async def upload_room_scan(
+    request: Request,
+    room_type: str = Form(...),
+    files: List[UploadFile] = File(...)
+):
+    """
+    Handle room scan image uploads.
+    """
+    # Create uploads directory if it doesn't exist
+    upload_dir = Path("uploads") / "room_scans" / room_type.lower()
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    saved_files = []
+    
+    for file in files:
+        # Generate a unique filename
+        file_ext = file.filename.split('.')[-1]
+        filename = f"{uuid.uuid4()}.{file_ext}"
+        file_path = upload_dir / filename
+        
+        # Save the file
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        saved_files.append(str(file_path))
+    
+    return JSONResponse({
+        "status": "success",
+        "message": f"Successfully uploaded {len(saved_files)} files for {room_type}",
+        "saved_files": saved_files
+    })
+
+@app.get("/adapt/start")
 async def adapt_tool_start(request: Request):
     """
     Serve the ADAPT Tool start page.
     """
-    return templates.TemplateResponse("adapt_tool_start.html", {"request": request, "current_date": datetime.now().strftime("%B %d, %Y")})
+    return RedirectResponse(url="/room-scan")
 
 @app.get("/adapt-tool/upload", response_class=HTMLResponse)
 async def adapt_tool_upload(request: Request):
@@ -1136,19 +1744,14 @@ async def assess_hazards(
                 "hazards": []
             }
         
-        # Load risk assessment data
+        # Load risk assessment configuration
         try:
-            matrix_path = BASE_DIR / "axa_app_mvp" / "logic" / "risk_matrix_v1.csv"
-            thresholds_path = BASE_DIR / "axa_app_mvp" / "logic" / "risk_score_thresholds.csv"
-            mapping_path = BASE_DIR / "axa_app_mvp" / "logic" / "detection_to_hazard.csv"
-            
-            matrix = load_risk_matrix(matrix_path)
-            thresholds = load_thresholds(thresholds_path)
-            mapping = load_detection_mapping(mapping_path)
+            config_path = BASE_DIR / "axa_app_mvp" / "logic" / "config.json"
+            hazard_config = HazardConfig(config_path)
             
             # Map detected objects to hazards and score them
-            hazards = map_detected_objects_to_hazards(detected_objects, mapping)
-            report = score_hazards(hazards, profile, matrix, thresholds)
+            hazards = map_detected_objects_to_hazards(detected_objects, hazard_config)
+            report = score_hazards(hazards, profile, hazard_config)
             
             # Add timestamp and metadata
             report["timestamp"] = datetime.utcnow().isoformat()

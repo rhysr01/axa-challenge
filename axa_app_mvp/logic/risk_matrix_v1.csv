@@ -1,6 +1,0 @@
-hazard,weight_mobility,weight_vision,weight_cognition,base_score
-loose_rugs,2,1,1,10
-poor_lighting,1,2,1,8
-steps_or_thresholds,2,1,2,12
-no_grab_bars,2,1,2,15
-clutter,2,1,2,12

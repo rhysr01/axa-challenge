@@ -1,0 +1,698 @@
+{% extends "base.html" %}
+
+{% block title %}AXA ADAPT - QR Health Data{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/qr-mode.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/qr-card-personalization.css') }}">
+<style>
+    /* Validation styles */
+    .form-control.is-invalid,
+    .form-select.is-invalid {
+        border-color: #dc3545;
+        padding-right: calc(1.5em + 0.75rem);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    .form-control.is-valid,
+    .form-select.is-valid {
+        border-color: #198754;
+        padding-right: calc(1.5em + 0.75rem);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    .invalid-feedback {
+        display: none;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+    
+    .is-invalid ~ .invalid-feedback,
+    .is-invalid ~ .invalid-tooltip {
+        display: block;
+    }
+    
+    .valid-feedback {
+        display: none;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #198754;
+    }
+    
+    .is-valid ~ .valid-feedback,
+    .is-valid ~ .valid-tooltip {
+        display: block;
+    }
+    
+    .form-feedback {
+        position: relative;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        border-radius: 0.25rem;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .form-feedback.fade {
+        opacity: 0;
+        transition: opacity 0.15s linear;
+    }
+    
+    .form-feedback.alert-success {
+        color: #0f5132;
+        background-color: #d1e7dd;
+        border-color: #badbcc;
+    }
+    
+    .form-feedback.alert-error {
+        color: #842029;
+        background-color: #f8d7da;
+        border-color: #f5c2c7;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    /* Accessibility focus styles */
+    .form-control:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    /* Tooltip styling */
+    .form-text {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #6c757d;
+    }
+    
+    /* Required field indicator */
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Back Button -->
+    <div class="mb-4">
+        <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Home
+        </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="text-center mb-4">
+        <h1 class="mb-2">QR Health Data Generator</h1>
+        <p class="lead text-muted">Create a secure QR code with your health information for emergency situations</p>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-10">
+            <div class="steps">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Profile</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Access</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Expiry</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Card Style</div>
+                </div>
+                <div class="step" data-step="5">
+                    <div class="step-number">5</div>
+                    <div class="step-label">Generate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Multi-step Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <form id="qrHealthForm" class="needs-validation" novalidate>
+                <!-- Step 1: Profile Confirmation -->
+                <div class="form-step active" id="step1">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">👤 Profile Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-4">Please confirm and update your personal and health information.</p>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="fullName" class="form-label required-field">Full Name</label>
+                                    <input type="text" class="form-control" id="fullName" name="profile.fullName" value="John A. Smith" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="dateOfBirth" class="form-label required-field">Date of Birth</label>
+                                    <input type="date" class="form-control" id="dateOfBirth" name="profile.dob" value="1955-06-15" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="bloodType" class="form-label">Blood Type</label>
+                                    <select class="form-select" id="bloodType" name="profile.bloodType">
+                                        <option value="">Select blood type</option>
+                                        <option value="A+" {% if profile.bloodType == 'A+' %}selected{% endif %}>A+</option>
+                                        <option value="A-" {% if profile.bloodType == 'A-' %}selected{% endif %}>A-</option>
+                                        <option value="B+" {% if profile.bloodType == 'B+' %}selected{% endif %}>B+</option>
+                                        <option value="B-" {% if profile.bloodType == 'B-' %}selected{% endif %}>B-</option>
+                                        <option value="AB+" {% if profile.bloodType == 'AB+' %}selected{% endif %}>AB+</option>
+                                        <option value="AB-" {% if profile.bloodType == 'AB-' %}selected{% endif %}>AB-</option>
+                                        <option value="O+" {% if profile.bloodType == 'O+' %}selected{% endif %}>O+</option>
+                                        <option value="O-" {% if profile.bloodType == 'O-' %}selected{% endif %}>O-</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="organDonor" class="form-label">Organ Donor Status</label>
+                                    <select class="form-select" id="organDonor" name="profile.organDonor">
+                                        <option value="">Select status</option>
+                                        <option value="registered" {% if profile.organDonor == 'registered' %}selected{% endif %}>Registered Donor</option>
+                                        <option value="not_registered" {% if profile.organDonor == 'not_registered' %}selected{% endif %}>Not Registered</option>
+                                        <option value="undecided" {% if profile.organDonor == 'undecided' %}selected{% endif %}>Undecided</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label for="allergies" class="form-label">Allergies</label>
+                                    <input type="text" class="form-control" id="allergies" name="profile.allergies" value="{{ profile.allergies|default('Penicillin, Peanuts', true) }}" placeholder="List any allergies">
+                                </div>
+                                <div class="col-12">
+                                    <label for="medications" class="form-label">Current Medications</label>
+                                    <textarea class="form-control" id="medications" name="profile.medications" rows="2" placeholder="List current medications and dosages">{{ profile.medications|default('Lisinopril 10mg daily, Metformin 500mg twice daily', true) }}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label for="conditions" class="form-label">Medical Conditions</label>
+                                    <textarea class="form-control" id="conditions" name="profile.conditions" rows="2" placeholder="List any chronic conditions or medical history">{{ profile.conditions|default('Type 2 Diabetes, Hypertension', true) }}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label for="notes" class="form-label">Additional Notes</label>
+                                    <textarea class="form-control" id="notes" name="profile.notes" rows="2" placeholder="Any other important medical information">{{ profile.notes|default('', true) }}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="emergencyContactToggle" name="emergencyContactEnabled">
+                                        <label class="form-check-label" for="emergencyContactToggle">
+                                            Add emergency contact information
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Emergency Contact Fields (initially hidden) -->
+                            <div id="emergencyContactFields" class="mt-4 d-none">
+                                <hr class="my-4">
+                                <h6 class="mb-3">Emergency Contact</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="contactName" class="form-label">Name</label>
+                                        <div class="form-group-icon">
+                                            <i class="bi bi-person"></i>
+                                            <input type="text" class="form-control ps-4" id="contactName" name="profile.emergencyContact.name" value="{{ profile.emergencyContact.name|default('Sarah Smith', true) }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="contactRelationship" class="form-label">Relationship</label>
+                                        <div class="form-group-icon">
+                                            <i class="bi bi-people"></i>
+                                            <input type="text" class="form-control ps-4" id="contactRelationship" name="profile.emergencyContact.relationship" value="{{ profile.emergencyContact.relationship|default('Spouse', true) }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="contactPhone" class="form-label">Phone Number</label>
+                                        <div class="form-group-icon">
+                                            <i class="bi bi-telephone"></i>
+                                            <input type="tel" class="form-control ps-4" id="contactPhone" name="profile.emergencyContact.phone" value="{{ profile.emergencyContact.phone|default('+1 (555) 123-4567', true) }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="contactEmail" class="form-label">Email (Optional)</label>
+                                        <div class="form-group-icon">
+                                            <i class="bi bi-envelope"></i>
+                                            <input type="email" class="form-control ps-4" id="contactEmail" name="profile.emergencyContact.email" value="{{ profile.emergencyContact.email|default('sarah.smith@example.com', true) }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary btn-prev" disabled>
+                            <i class="bi bi-arrow-left me-2"></i>Back
+                        </button>
+                        <button type="button" class="btn btn-primary btn-next">
+                            Continue to Access Level<i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Access Level -->
+                <div class="form-step d-none" id="step2">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">🔑 Select Access Level</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-4">Choose what information will be accessible when someone scans your QR code.</p>
+                            
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="access-level-card active">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="accessLevel" id="basicAccess" value="basic" checked>
+                                            <label class="form-check-label fw-bold" for="basicAccess">
+                                                Basic Emergency View
+                                            </label>
+                                            <p class="text-muted mt-2">First responders see only critical information needed in an emergency.</p>
+                                            <div id="basicAccessInfo">
+                                                <ul class="list-unstyled small">
+                                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Full Name</li>
+                                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Blood Type</li>
+                                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Allergies</li>
+                                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Emergency Contact</li>
+                                                    <li class="mb-2"><i class="bi bi-x-circle-fill text-muted me-2"></i> Medical Conditions</li>
+                                                    <li class="mb-2"><i class="bi bi-x-circle-fill text-muted me-2"></i> Medications</li>
+                                                    <li class="mb-2"><i class="bi bi-x-circle-fill text-muted me-2"></i> Additional Notes</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="access-level-card">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="accessLevel" id="fullAccess" value="full">
+                                            <label class="form-check-label fw-bold" for="fullAccess">
+                                                Full Caregiver View
+                                            </label>
+                                            <p class="text-muted mt-2">Caregivers and family members see complete health information.</p>
+                                            <div id="fullAccessInfo" class="d-none">
+                                                <ul class="list-unstyled small">
+                                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Full Name</li>
+                                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Date of Birth</li>
+                                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Blood Type</li>
+                                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Allergies</li>
+                                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Medical Conditions</li>
+                                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Medications</li>
+                                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Emergency Contact</li>
+                                                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Additional Notes</li>
+                                                </ul>
+                                                <div class="alert alert-warning small mt-3">
+                                                    <i class="bi bi-shield-lock me-2"></i> Full access requires a secure token that you'll provide to trusted individuals.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="gdpr-notice mt-4">
+                                <h6><i class="bi bi-shield-check me-2"></i>Your Privacy Matters</h6>
+                                <p class="small mb-0">Your information is encrypted and stored securely. You control who can access your health data and for how long. <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Learn more</a></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary btn-prev">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Profile
+                        </button>
+                        <button type="button" class="btn btn-primary btn-next">
+                            Continue to Expiry Settings<i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Expiry Settings -->
+                <div class="form-step d-none" id="step3">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">📅 Expiry & Security Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-4">Set how long your QR code will remain active and who can access your information.</p>
+                            
+                            <h6 class="mb-3">Expiry Time</h6>
+                            <div class="expiry-options">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="expiry" id="expiry24h" value="24h" checked>
+                                    <label class="form-check-label w-100" for="expiry24h">
+                                        <div class="d-flex justify-content-between">
+                                            <span>24 Hours</span>
+                                            <span class="text-muted small">Ideal for temporary sharing</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="expiry" id="expiry72h" value="72h">
+                                    <label class="form-check-label w-100" for="expiry72h">
+                                        <div class="d-flex justify-content-between">
+                                            <span>72 Hours</span>
+                                            <span class="text-muted small">Good for short trips</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="expiry" id="expiry1w" value="1w">
+                                    <label class="form-check-label w-100" for="expiry1w">
+                                        <div class="d-flex justify-content-between">
+                                            <span>1 Week</span>
+                                            <span class="text-muted small">For longer trips or hospital stays</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="expiry" id="expiryCustom" value="custom">
+                                    <label class="form-check-label w-100" for="expiryCustom">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>Custom Date</span>
+                                            <input type="date" class="form-control form-control-sm ms-2" style="max-width: 150px;" id="customExpiryDate" disabled>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="expiry" id="expiryNone" value="none">
+                                    <label class="form-check-label w-100" for="expiryNone">
+                                        <div class="d-flex justify-content-between">
+                                            <span>No Expiry</span>
+                                            <span class="text-muted small">For permanent access</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h6>Additional Security</h6>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="requireAuth" name="requireAuth">
+                                    <label class="form-check-label" for="requireAuth">Require authentication for full access</label>
+                                    <div class="form-text small">Viewers will need to enter a PIN or use biometrics to see sensitive information.</div>
+                                </div>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notifyAccess" name="notifyAccess" checked>
+                                    <label class="form-check-label" for="notifyAccess">Notify me when someone accesses my information</label>
+                                </div>
+                            </div>
+                            
+                            <div class="gdpr-notice mt-4">
+                                <h6><i class="bi bi-shield-lock me-2"></i>GDPR Compliance</h6>
+                                <p class="small mb-0">Your data is protected under the General Data Protection Regulation (GDPR). You have the right to access, modify, or delete your information at any time. <a href="#" data-bs-toggle="modal" data-bs-target="#gdprModal">Learn more</a></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary btn-prev">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Access Level
+                        </button>
+                        <button type="button" class="btn btn-primary btn-next">
+                            Continue to Card Style<i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Card Style -->
+                <div class="form-step d-none" id="step4">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">🖼️ Customize Your QR Card</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-4">Choose a style for your QR card and add a personal touch.</p>
+                            
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-6">
+                                    <div class="card-option active" data-style="fridge">
+                                        <img src="{{ url_for('static', filename='img/qr-card-fridge.jpg') }}" class="card-img-top" alt="Fridge Magnet Style">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title mb-1">Fridge Magnet</h6>
+                                            <p class="card-text small text-muted">AXA-branded design for emergency use</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card-option" data-style="family">
+                                        <img src="{{ url_for('static', filename='img/qr-card-family.jpg') }}" class="card-img-top" alt="Family Photo Style">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title mb-1">Family Photo</h6>
+                                            <p class="card-text small text-muted">Personalized with your photo</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="familyPhotoUpload" class="mt-4 d-none">
+                                <h6 class="mb-3">Upload a Photo</h6>
+                                <div class="photo-upload-area" id="photoDropArea">
+                                    <i class="bi bi-cloud-arrow-up"></i>
+                                    <h6>Drag & Drop Your Photo</h6>
+                                    <p class="small text-muted mb-2">or</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-upload me-2"></i>Select from Device
+                                    </button>
+                                    <input type="file" id="photoUpload" accept="image/*" class="d-none">
+                                    <img id="photoPreview" class="img-fluid rounded mt-3 d-none" alt="Preview">
+                                </div>
+                                <div class="form-text small mt-2">For best results, use a clear, well-lit headshot or family photo.</div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h6 class="mb-3">Preview</h6>
+                                <div class="border rounded p-4 text-center" style="background-color: #f8f9fa;">
+                                    <div class="d-inline-block text-start p-3 bg-white rounded shadow-sm" style="max-width: 300px;">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                <i class="bi bi-person-fill" style="font-size: 1.5rem;"></i>
+                                            </div>
+                                            <div class="ms-3">
+                                                <h6 class="mb-0">John A. Smith</h6>
+                                                <small class="text-muted">Emergency Health Info</small>
+                                            </div>
+                                        </div>
+                                        <div class="text-center p-3 border rounded" style="background-color: #fff;">
+                                            <div class="qr-placeholder bg-light p-3 d-inline-block mb-2">
+                                                <i class="bi bi-qr-code" style="font-size: 5rem; color: #001689;"></i>
+                                            </div>
+                                            <p class="small text-muted mb-0">Scan with any QR code reader</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary btn-prev">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Expiry Settings
+                        </button>
+                        <button type="button" class="btn btn-primary btn-next">
+                            Generate QR Code<i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 5: Generate QR Code -->
+                <div class="form-step d-none" id="step5">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">✅ Your QR Code is Ready</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center py-4">
+                                <div class="mb-4">
+                                    <div class="qr-preview-container mx-auto">
+                                        <div class="qr-preview p-4 bg-white rounded shadow-sm">
+                                            <div id="qrCodeContainer" class="text-center">
+                                                <div class="text-center">
+                                                    <div class="qr-placeholder bg-light p-4 d-inline-block mb-3">
+                                                        <i class="bi bi-qr-code" style="font-size: 10rem; color: #001689;"></i>
+                                                    </div>
+                                                    <p class="text-muted">Your QR code will be generated here with the selected information.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="downloadButtons" class="d-none">
+                                    <h5 class="mb-4">Download & Share</h5>
+                                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                                        <button type="button" id="downloadQrBtn" class="btn btn-outline-primary">
+                                            <i class="bi bi-download me-2"></i>Download QR Code
+                                        </button>
+                                        <button type="button" id="downloadPdfBtn" class="btn btn-primary">
+                                            <i class="bi bi-file-earmark-pdf me-2"></i>Download as PDF
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary">
+                                            <i class="bi bi-envelope me-2"></i>Email to Family
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="mt-4">
+                                        <div class="alert alert-info">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-info-circle-fill me-2"></i>
+                                                <div>
+                                                    <h6 class="alert-heading mb-1">Sharing Instructions</h6>
+                                                    <p class="mb-0 small">Print this QR code and place it on your refrigerator, wallet, or phone case for easy access in emergencies.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body">
+                                            <h6 class="card-title"><i class="bi bi-shield-check text-success me-2"></i>Security Information</h6>
+                                            <ul class="small text-muted">
+                                                <li class="mb-1">Access Level: <span id="accessLevelBadge" class="badge bg-primary">Basic Emergency</span></li>
+                                                <li class="mb-1">Expires: <span id="expiryDate">24 hours from now</span></li>
+                                                <li class="mb-1">Last Updated: <span id="lastUpdated">Just now</span></li>
+                                                <li>QR Code ID: <code>QR-5X9K-2M7N-4P1Q</code></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mt-3 mt-md-0">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body">
+                                            <h6 class="card-title"><i class="bi bi-question-circle text-primary me-2"></i>Need Help?</h6>
+                                            <p class="small text-muted">If you have any questions or need to update your information, please contact our support team.</p>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-headset me-1"></i> Contact Support
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-outline-secondary btn-prev">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Card Style
+                        </button>
+                        <a href="{{ url_for('home') }}" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Done
+                        </a>
+                    </div>
+                </div>
+            </form>
+            
+            <div class="text-center text-muted small mt-4">
+                <i class="bi bi-shield-lock me-1"></i> Your information is encrypted and stored securely.
+                <a href="#" class="text-decoration-none ms-2">Learn more about our security measures</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Modal -->
+<div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="privacyModalLabel"><i class="bi bi-shield-lock me-2"></i>Your Privacy Matters</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Form validation feedback will be inserted here -->
+            <div id="formFeedback"></div>
+                <h6>How We Protect Your Data</h6>
+                <p>Your health information is encrypted using industry-standard AES-256 encryption. Only authorized individuals with the correct access level can view your information.</p>
+                
+                <h6 class="mt-4">Access Control</h6>
+                <p>You have full control over who can see your information and for how long. You can revoke access at any time by deactivating your QR code.</p>
+                
+                <h6 class="mt-4">Data Storage</h6>
+                <p>Your information is stored securely in compliance with healthcare data protection regulations. We never sell or share your data with third parties.</p>
+                
+                <div class="alert alert-warning mt-4">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Important:</strong> While we take every precaution to secure your data, please be cautious about who you share your QR code with. Only share it with trusted individuals and healthcare providers.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary">View Full Privacy Policy</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GDPR Modal -->
+<div class="modal fade" id="gdprModal" tabindex="-1" aria-labelledby="gdprModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="gdprModalLabel"><i class="bi bi-shield-check me-2"></i>GDPR Compliance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Your Rights Under GDPR</h6>
+                <p>The General Data Protection Regulation (GDPR) gives you control over your personal data. You have the right to:</p>
+                
+                <ul>
+                    <li>Access the personal data we hold about you</li>
+                    <li>Request correction of incorrect or incomplete data</li>
+                    <li>Request deletion of your personal data</li>
+                    <li>Restrict or object to processing of your data</li>
+                    <li>Request transfer of your data to another service</li>
+                    <li>Withdraw consent at any time</li>
+                </ul>
+                
+                <h6 class="mt-4">Data Protection Officer</h6>
+                <p>For any questions or requests regarding your personal data, please contact our Data Protection Officer at <a href="mailto:privacy@axa-adapt.com">privacy@axa-adapt.com</a>.</p>
+                
+                <div class="alert alert-info mt-4">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    <strong>Note:</strong> Some data may be retained for legal or regulatory purposes even after account deletion.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary">Download My Data</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/qr-mode.js') }}"></script>
+<script src="{{ url_for('static', filename='axa_theme/js/qr-form-validation.js') }}"></script>
+{% endblock %}

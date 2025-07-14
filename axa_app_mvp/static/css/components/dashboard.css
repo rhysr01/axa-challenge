@@ -1,0 +1,210 @@
+/* Dashboard Layout Styles */
+
+/* Dashboard Tabs */
+.dashboard-tabs {
+    border-bottom: 2px solid var(--color-border-light);
+    margin-bottom: var(--space-lg);
+}
+
+.dashboard-tabs .nav-link {
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-bottom: 3px solid transparent;
+    transition: all var(--transition-fast) ease;
+    position: relative;
+    margin-right: var(--space-xs);
+    background: none;
+    border-radius: 0;
+}
+
+.dashboard-tabs .nav-link:hover:not(.active) {
+    color: var(--color-axa-blue);
+    background: rgba(var(--color-axa-blue-rgb), 0.05);
+}
+
+.dashboard-tabs .nav-link.active {
+    color: var(--color-axa-blue);
+    background: transparent;
+    border-color: var(--color-axa-blue);
+}
+
+.dashboard-tab-content {
+    padding: var(--space-lg) 0;
+}
+
+/* Welcome Banner */
+.welcome-banner {
+    background: linear-gradient(135deg, var(--color-axa-blue), var(--color-axa-dark-blue));
+    color: white;
+    border-radius: var(--border-radius-lg);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-banner h1 {
+    font-weight: 700;
+    margin-bottom: var(--space-md);
+    color: white;
+}
+
+.welcome-banner p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    max-width: 800px;
+    margin-bottom: 0;
+}
+
+.welcome-banner .pattern {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    opacity: 0.1;
+    pointer-events: none;
+}
+
+/* Feature Cards */
+.feature-card {
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    transition: all var(--transition-normal) ease;
+    height: 100%;
+    background: var(--color-bg-card);
+    box-shadow: var(--shadow-sm);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-axa-blue-light);
+}
+
+.feature-card .card-body {
+    padding: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.feature-card .card-icon {
+    font-size: 2.5rem;
+    color: var(--color-axa-blue);
+    margin-bottom: var(--space-lg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    background: rgba(var(--color-axa-blue-rgb), 0.1);
+    border-radius: 50%;
+}
+
+.feature-card .card-title {
+    color: var(--color-axa-blue);
+    font-weight: 700;
+    margin-bottom: var(--space-md);
+    font-size: 1.5rem;
+}
+
+.feature-card .card-text {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-xl);
+    flex-grow: 1;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 600;
+    border-radius: 50rem;
+    text-transform: capitalize;
+}
+
+.status-badge.active {
+    background-color: var(--color-success-light);
+    color: var(--color-success-dark);
+}
+
+.status-badge.inactive {
+    background-color: var(--color-warning-light);
+  color: var(--color-warning-dark);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 991.98px) {
+    .dashboard-tabs .nav-link {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    .welcome-banner {
+        padding: var(--space-lg);
+    }
+    
+    .welcome-banner h1 {
+        font-size: 1.75rem;
+    }
+    
+    .feature-card .card-body {
+        padding: var(--space-lg);
+    }
+}
+
+@media (max-width: 767.98px) {
+    .dashboard-tabs {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        -ms-overflow-style: -ms-autohiding-scrollbar;
+        scrollbar-width: none;
+    }
+    
+    .dashboard-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .welcome-banner {
+        text-align: center;
+    }
+    
+    .welcome-banner .pattern {
+        display: none;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .feature-card {
+        background: var(--color-bg-secondary);
+        border-color: var(--color-border-dark);
+    }
+    
+    .dashboard-tabs {
+        border-bottom-color: var(--color-border-dark);
+    }
+    
+    .dashboard-tabs .nav-link {
+        color: var(--color-text-secondary-dark);
+    }
+    
+    .dashboard-tabs .nav-link:hover:not(.active) {
+        color: var(--color-axa-blue-light);
+        background: rgba(var(--color-axa-blue-rgb), 0.1);
+    }
+    
+    .dashboard-tabs .nav-link.active {
+        color: var(--color-axa-blue-light);
+    }
+    
+    .feature-card .card-text {
+        color: var(--color-text-secondary-dark);
+    }
+}

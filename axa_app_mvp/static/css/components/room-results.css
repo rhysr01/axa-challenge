@@ -1,0 +1,288 @@
+/* Room Scan Results Component Styles */
+
+/* Results Header */
+.results-header {
+    background: linear-gradient(135deg, #F8F9FF 0%, #FFFFFF 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--color-border-light);
+}
+
+/* Overall Risk Score */
+.overall-risk {
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0;
+}
+
+.risk-score {
+    text-align: center;
+    padding: 1.5rem;
+    max-width: 300px;
+    width: 100%;
+}
+
+.score-circle {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 1rem;
+    color: white;
+    font-weight: 700;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.score-circle.low-risk {
+    background: linear-gradient(135deg, #00A651, #5CB85C);
+}
+
+.score-circle.medium-risk {
+    background: linear-gradient(135deg, #F0AD4E, #FFB81C);
+}
+
+.score-circle.high-risk {
+    background: linear-gradient(135deg, #D9534F, #FF1721);
+}
+
+.score-circle .score {
+    font-size: 3.5rem;
+    line-height: 1;
+}
+
+.score-circle .score-label {
+    font-size: 1.25rem;
+    opacity: 0.9;
+}
+
+/* Room Cards */
+.room-card {
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+
+.room-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.room-card .card-header {
+    background-color: var(--color-bg-secondary);
+    border-bottom: 1px solid var(--color-border-light);
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+}
+
+.room-card .badge {
+    font-size: 0.8rem;
+    padding: 0.4em 0.8em;
+    border-radius: 50px;
+    font-weight: 600;
+}
+
+/* Hazard List */
+.hazard-list {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.hazard-list li {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px dashed var(--color-border-light);
+}
+
+.hazard-list li:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+/* Priority Recommendations */
+.priority-recommendations {
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.priority-recommendations .card-header {
+    background-color: var(--color-bg-secondary);
+    border-bottom: 1px solid var(--color-border-light);
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+}
+
+.priority-recommendations .table {
+    margin-bottom: 0;
+}
+
+.priority-recommendations th {
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    border-bottom-width: 2px;
+}
+
+/* Detailed Findings */
+.detailed-findings .accordion-item {
+    border: 1px solid var(--color-border);
+    border-radius: 8px !important;
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.detailed-findings .accordion-button {
+    font-weight: 600;
+    padding: 1.25rem 1.5rem;
+    background-color: var(--color-bg-secondary);
+}
+
+.detailed-findings .accordion-button:not(.collapsed) {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-axa-blue);
+    box-shadow: none;
+}
+
+.detailed-findings .accordion-button:focus {
+    box-shadow: none;
+    border-color: var(--color-axa-blue);
+}
+
+.detailed-findings .accordion-body {
+    padding: 1.5rem;
+}
+
+/* Hazard Icons */
+.hazard-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.hazard-icon.bg-danger {
+    background-color: var(--color-danger);
+}
+
+.hazard-icon.bg-warning {
+    background-color: var(--color-warning);
+}
+
+.hazard-icon.bg-info {
+    background-color: var(--color-info);
+}
+
+/* Print Styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    body {
+        padding: 0;
+        background: white;
+        font-size: 12px;
+    }
+    
+    .container {
+        max-width: 100%;
+        padding: 0;
+    }
+    
+    .card, .accordion-item {
+        border: 1px solid #ddd !important;
+        page-break-inside: avoid;
+    }
+    
+    .score-circle {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .score-circle .score {
+        font-size: 2.5rem;
+    }
+    
+    .score-circle .score-label {
+        font-size: 1rem;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+    }
+    
+    .page-break {
+        page-break-before: always;
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 991.98px) {
+    .score-circle {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .score-circle .score {
+        font-size: 3rem;
+    }
+    
+    .priority-recommendations .table {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .results-header {
+        padding: 1.5rem 1rem;
+    }
+    
+    .score-circle {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .score-circle .score {
+        font-size: 2.5rem;
+    }
+    
+    .priority-recommendations .table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .detailed-findings .accordion-button {
+        font-size: 1rem;
+        padding: 1rem;
+    }
+    
+    .hazard-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+}
+
+/* Accessibility Focus Styles */
+:focus-visible {
+    outline: 3px solid var(--color-axa-red);
+    outline-offset: 2px;
+    border-radius: 4px;
+}

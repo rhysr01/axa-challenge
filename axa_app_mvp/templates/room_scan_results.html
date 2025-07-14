@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}AXA ADAPT - Room Scan Results{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/room-results.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Back Button -->
+    <div class="mb-4">
+        <a href="{{ url_for('room_scan_mode') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Room Scan
+        </a>
+    </div>
+
+    <!-- Results Header -->
+    <div class="results-header text-center mb-5">
+        <h1 class="mb-3">Your Home Safety Assessment</h1>
+        <p class="lead text-muted">Completed on {{ current_time.strftime('%B %d, %Y at %I:%M %p') }}</p>
+        
+        <!-- Overall Risk Score -->
+        <div class="overall-risk mt-4">
+            <div class="risk-score">
+                <div class="score-circle {{ 'low-risk' if overall_risk == 'Low' else 'medium-risk' if overall_risk == 'Medium' else 'high-risk' }}">
+                    <span class="score">{{ overall_score }}</span>
+                    <span class="score-label">/ 100</span>
+                </div>
+                <h3 class="mt-3">{{ overall_risk }} Risk</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room-by-Room Analysis -->
+    <div class="room-analysis mb-5">
+        <h2 class="mb-4">Room-by-Room Analysis</h2>
+        <div class="row g-4">
+            {% for room in rooms %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 room-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi {{ room.icon }}"></i> {{ room.name }}
+                        </h5>
+                        <span class="badge {{ 'bg-success' if room.risk == 'Low' else 'bg-warning' if room.risk == 'Medium' else 'bg-danger' }}">
+                            {{ room.score }}/100
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <h6>Identified Hazards:</h6>
+                        <ul class="hazard-list">
+                            {% for hazard in room.hazards %}
+                            <li class="d-flex align-items-start mb-2">
+                                <i class="bi {{ 'bi-check-circle-fill text-success' if hazard.resolved else 'bi-exclamation-triangle-fill text-warning' }} me-2 mt-1"></i>
+                                <div>
+                                    <strong>{{ hazard.name }}</strong>
+                                    <div class="text-muted small">{{ hazard.description }}</div>
+                                    {% if hazard.recommendation %}
+                                    <div class="recommendation mt-1">
+                                        <small class="text-muted">Recommendation:</small>
+                                        <div class="small">{{ hazard.recommendation }}</div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% else %}
+                            <li class="text-muted">No significant hazards detected</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Priority Recommendations -->
+    <div class="priority-recommendations card mb-5">
+        <div class="card-header bg-light">
+            <h2 class="mb-0">Priority Recommendations</h2>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Priority</th>
+                            <th>Recommendation</th>
+                            <th>Room</th>
+                            <th>Estimated Cost</th>
+                            <th>Time Required</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rec in recommendations %}
+                        <tr>
+                            <td>
+                                <span class="badge {{ 'bg-danger' if rec.priority == 'High' else 'bg-warning' if rec.priority == 'Medium' else 'bg-info' }}">
+                                    {{ rec.priority }}
+                                </span>
+                            </td>
+                            <td>{{ rec.description }}</td>
+                            <td>{{ rec.room }}</td>
+                            <td>{{ rec.cost }}</td>
+                            <td>{{ rec.time }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons d-flex justify-content-between mb-5">
+        <div>
+            <button class="btn btn-outline-primary me-2 no-print" onclick="window.print()">
+                <i class="bi bi-printer"></i> Print Report
+            </button>
+            <button class="btn btn-outline-secondary no-print" id="emailReport">
+                <i class="bi bi-envelope"></i> Email Report
+            </button>
+        </div>
+        <div>
+            <a href="{{ url_for('qr_mode') }}" class="btn btn-primary">
+                Create Emergency QR Code <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Detailed Findings (Accordion) -->
+    <div class="detailed-findings mb-5">
+        <h2 class="mb-4">Detailed Findings</h2>
+        <div class="accordion" id="findingsAccordion">
+            {% for room in rooms %}
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="heading{{ loop.index }}">
+                    <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" 
+                            type="button" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#collapse{{ loop.index }}" 
+                            aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" 
+                            aria-controls="collapse{{ loop.index }}">
+                        <i class="bi {{ room.icon }} me-2"></i> {{ room.name }} ({{ room.score }}/100)
+                    </button>
+                </h3>
+                <div id="collapse{{ loop.index }}" 
+                     class="accordion-collapse collapse {% if loop.first %}show{% endif %}" 
+                     aria-labelledby="heading{{ loop.index }}" 
+                     data-bs-parent="#findingsAccordion">
+                    <div class="accordion-body">
+                        {% if room.hazards %}
+                            {% for hazard in room.hazards %}
+                            <div class="hazard-item mb-4">
+                                <div class="d-flex align-items-start">
+                                    <div class="me-3">
+                                        <div class="hazard-icon {{ 'bg-danger' if hazard.severity == 'High' else 'bg-warning' if hazard.severity == 'Medium' else 'bg-info' }}">
+                                            <i class="bi {{ 'bi-exclamation-triangle' if hazard.severity == 'High' else 'bi-info-circle' }}"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-1">{{ hazard.name }}</h5>
+                                        <p class="text-muted mb-2">{{ hazard.description }}</p>
+                                        
+                                        {% if hazard.recommendation %}
+                                        <div class="recommendation p-3 bg-light rounded">
+                                            <h6 class="mb-2">Recommendation:</h6>
+                                            <p class="mb-2">{{ hazard.recommendation }}</p>
+                                            {% if hazard.benefit %}
+                                            <p class="mb-0"><small class="text-muted">Benefit: {{ hazard.benefit }}</small></p>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if hazard.images %}
+                                        <div class="hazard-images mt-3">
+                                            <h6>Reference Images:</h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                {% for img in hazard.images %}
+                                                <img src="{{ img }}" class="img-thumbnail" style="max-height: 100px;" alt="Hazard reference">
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% if not loop.last %}<hr>{% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-check-circle-fill text-success display-4 mb-3"></i>
+                                <p class="lead">No significant hazards detected in this room.</p>
+                                <p class="text-muted">Continue following general safety guidelines for optimal home safety.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle email report button click
+        document.getElementById('emailReport').addEventListener('click', function() {
+            // In a real app, this would trigger an email modal or API call
+            alert('In a production environment, this would open an email dialog with the report attached.');
+        });
+        
+        // Print styles
+        window.addEventListener('beforeprint', function() {
+            // Add any print-specific logic here
+        });
+    });
+</script>
+{% endblock %}

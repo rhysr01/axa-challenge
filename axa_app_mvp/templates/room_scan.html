@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}AXA ADAPT - Room Scan Assessment{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components/room-scan.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Mode Selection -->
+    <div class="mode-selection mb-5">
+        <div class="d-flex justify-content-center">
+            <div class="btn-group" role="group" aria-label="Select Mode">
+                <a href="{{ url_for('room_scan_mode') }}" class="btn btn-primary active" aria-current="page">
+                    <i class="bi bi-house-door"></i> Room Scan Mode
+                </a>
+                <a href="{{ url_for('qr_mode') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-qr-code"></i> QR Health Data Mode
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="room-scan-container">
+        <!-- Room Selection Tabs -->
+        <div class="room-selection mb-4">
+            <h2 class="mb-4 text-center">Select a Room to Scan</h2>
+            <div class="d-flex flex-wrap justify-content-center gap-3" id="roomTabs" role="tablist">
+                {% for room in ['Bedroom', 'Bathroom', 'Living Room', 'Hallway', 'Stairs'] %}
+                <button class="btn btn-outline-primary room-tab" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#{{ room|lower|replace(' ', '') }}"
+                        type="button" 
+                        role="tab"
+                        aria-controls="{{ room|lower|replace(' ', '') }}" 
+                        aria-selected="{{ 'true' if loop.first else 'false' }}">
+                    <i class="bi {% if room == 'Bedroom' %}bi-house-door{% elif room == 'Bathroom' %}bi-emoji-sunglasses{% elif room == 'Living Room' %}bi-tv{% elif room == 'Hallway' %}bi-arrow-left-right{% else %}bi-stairs{% endif %}"></i>
+                    {{ room }}
+                    <span class="upload-status" id="{{ room|lower|replace(' ', '') }}-status"></span>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="roomTabContent">
+            {% for room in ['Bedroom', 'Bathroom', 'Living Room', 'Hallway', 'Stairs'] %}
+            <div class="tab-pane fade {{ 'show active' if loop.first else '' }}" 
+                 id="{{ room|lower|replace(' ', '') }}" 
+                 role="tabpanel" 
+                 aria-labelledby="{{ room|lower|replace(' ', '') }}-tab">
+                
+                <!-- Upload Section -->
+                <div class="upload-section mb-5">
+                    <h3 class="mb-3">Upload Photos of {{ room }}</h3>
+                    <div class="upload-area" id="uploadArea-{{ room|lower|replace(' ', '') }}">
+                        <div class="upload-content">
+                            <i class="bi bi-cloud-arrow-up display-4 mb-3"></i>
+                            <p class="mb-2">Drag & drop your photos here</p>
+                            <p class="text-muted mb-3">or</p>
+                            <button class="btn btn-primary" onclick="document.getElementById('fileInput-{{ room|lower|replace(' ', '') }}').click()">
+                                Browse Files
+                            </button>
+                            <input type="file" id="fileInput-{{ room|lower|replace(' ', '') }}" 
+                                   class="d-none" multiple accept="image/*" 
+                                   onchange="handleFileSelect(this, '{{ room|lower|replace(' ', '') }}')">
+                        </div>
+                    </div>
+                    <div class="upload-progress mt-3 d-none" id="progress-{{ room|lower|replace(' ', '') }}">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" 
+                                 style="width: 0%" 
+                                 aria-valuenow="0" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100"></div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <span class="upload-status-text">Uploading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Uploaded Images Preview -->
+                <div class="uploaded-images mb-4" id="preview-{{ room|lower|replace(' ', '') }}">
+                    <!-- Images will be added here dynamically -->
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Health Profile Section -->
+        <div class="health-profile-section card mb-5">
+            <div class="card-header bg-light">
+                <h3 class="mb-0">Your Health Profile</h3>
+            </div>
+            <div class="card-body">
+                <form id="healthProfileForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="age" class="form-label">Age</label>
+                            <input type="number" class="form-control form-control-lg" id="age" min="1" max="120" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="mobility" class="form-label">Mobility Level</label>
+                            <select class="form-select form-select-lg" id="mobility" required>
+                                <option value="" selected disabled>Select mobility level</option>
+                                <option value="low">Low (No mobility issues)</option>
+                                <option value="medium">Medium (Uses cane/walker occasionally)</option>
+                                <option value="high">High (Uses walker/wheelchair frequently)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="vision" class="form-label">Vision Quality</label>
+                            <select class="form-select form-select-lg" id="vision" required>
+                                <option value="" selected disabled>Select vision quality</option>
+                                <option value="excellent">Excellent (20/20 vision with or without glasses)</option>
+                                <option value="good">Good (Corrected vision with glasses/contacts)</option>
+                                <option value="poor">Poor (Significant vision impairment)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="cognition" class="form-label">Cognitive Status</label>
+                            <select class="form-select form-select-lg" id="cognition" required>
+                                <option value="" selected disabled>Select cognitive status</option>
+                                <option value="excellent">Excellent (No cognitive issues)</option>
+                                <option value="mild">Mild (Occasional forgetfulness)</option>
+                                <option value="moderate">Moderate (Frequent memory issues)</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons d-flex justify-content-between mb-5">
+            <button class="btn btn-outline-secondary" onclick="window.history.back()">
+                <i class="bi bi-arrow-left"></i> Back
+            </button>
+            <button class="btn btn-primary" id="analyzeBtn" disabled>
+                <span class="spinner-border spinner-border-sm d-none" id="analyzeSpinner" role="status" aria-hidden="true"></span>
+                <span id="analyzeText">Start Hazard Detection</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Handle file selection and preview
+    function handleFileSelect(input, roomId) {
+        const files = input.files;
+        const preview = document.getElementById(`preview-${roomId}`);
+        const uploadStatus = document.getElementById(`${roomId}-status`);
+        
+        if (files.length > 0) {
+            // Show upload status
+            uploadStatus.innerHTML = '📤 Uploading...';
+            uploadStatus.className = 'upload-status text-warning';
+            
+            // Simulate upload progress
+            const progressBar = document.querySelector(`#progress-${roomId} .progress-bar`);
+            const progressText = document.querySelector(`#progress-${roomId} .upload-status-text`);
+            const progressContainer = document.getElementById(`progress-${roomId}`);
+            
+            progressContainer.classList.remove('d-none');
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = `${progress}%`;
+                progressBar.setAttribute('aria-valuenow', progress);
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    progressText.textContent = 'Upload Complete!';
+                    uploadStatus.innerHTML = '✅ Uploaded';
+                    uploadStatus.className = 'upload-status text-success';
+                    
+                    // Enable analyze button if all required rooms are uploaded
+                    checkAllUploads();
+                }
+            }, 200);
+            
+            // Create preview for each file
+            preview.innerHTML = '';
+            for (let i = 0; i < Math.min(files.length, 5); i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'img-thumbnail me-2 mb-2';
+                    img.style.maxHeight = '100px';
+                    preview.appendChild(img);
+                }
+                
+                reader.readAsDataURL(file);
+            }
+        }
+    }
+    
+    // Check if all required rooms have been uploaded
+    function checkAllUploads() {
+        const requiredRooms = ['bedroom', 'bathroom', 'livingroom', 'hallway', 'stairs'];
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        
+        // In a real app, you would check if all required rooms have been uploaded
+        // For now, we'll just check if at least one room has been uploaded
+        const hasUploads = requiredRooms.some(room => {
+            const status = document.getElementById(`${room}-status`);
+            return status && status.textContent.includes('✅');
+        });
+        
+        analyzeBtn.disabled = !hasUploads;
+    }
+    
+    // Initialize drag and drop
+    document.addEventListener('DOMContentLoaded', function() {
+        const uploadAreas = document.querySelectorAll('.upload-area');
+        
+        uploadAreas.forEach(area => {
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('drag-over');
+            });
+            
+            area.addEventListener('dragleave', () => {
+                area.classList.remove('drag-over');
+            });
+            
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('drag-over');
+                
+                const roomId = area.id.replace('uploadArea-', '');
+                const fileInput = document.getElementById(`fileInput-${roomId}`);
+                
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    const event = new Event('change');
+                    fileInput.dispatchEvent(event);
+                }
+            });
+        });
+        
+        // Handle analyze button click
+        document.getElementById('analyzeBtn').addEventListener('click', function() {
+            const spinner = document.getElementById('analyzeSpinner');
+            const analyzeText = document.getElementById('analyzeText');
+            
+            // Show loading state
+            spinner.classList.remove('d-none');
+            analyzeText.textContent = 'Analyzing...';
+            this.disabled = true;
+            
+            // Simulate analysis
+            setTimeout(() => {
+                // Redirect to results page in a real app
+                window.location.href = "{{ url_for('room_scan_results') }}";
+            }, 2000);
+        });
+    });
+</script>
+{% endblock %}
